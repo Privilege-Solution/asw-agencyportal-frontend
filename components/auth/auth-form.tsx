@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Mail, Shield } from "lucide-react"
+import { Mail, Shield, ArrowLeft } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 
-interface AuthFormProps {
-  onAuthenticated: () => void
+interface EmailOtpFormProps {
+  // No props needed as we use context
 }
 
-export function AuthForm({ onAuthenticated }: AuthFormProps) {
+export function EmailOtpForm({}: EmailOtpFormProps) {
+  const { login, setAuthMethod } = useAuth()
   const [step, setStep] = useState<"email" | "otp">("email")
   const [email, setEmail] = useState("")
   const [otp, setOtp] = useState("")
@@ -41,7 +43,12 @@ export function AuthForm({ onAuthenticated }: AuthFormProps) {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000))
     setIsLoading(false)
-    onAuthenticated()
+    
+    // Login with email OTP
+    login('email', {
+      email: email,
+      name: email.split('@')[0]
+    })
   }
 
   return (
@@ -50,7 +57,7 @@ export function AuthForm({ onAuthenticated }: AuthFormProps) {
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
           <Shield className="h-6 w-6 text-blue-600" />
         </div>
-        <CardTitle className="text-2xl font-bold">AssetWise Agency Portal</CardTitle>
+        <CardTitle className="text-2xl font-bold">Email OTP Login</CardTitle>
         <CardDescription>
           {step === "email" ? "Enter your email to receive OTP" : "Enter the OTP sent to your email"}
         </CardDescription>
@@ -96,9 +103,15 @@ export function AuthForm({ onAuthenticated }: AuthFormProps) {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Verifying..." : "Verify OTP"}
             </Button>
-            <Button type="button" variant="ghost" className="w-full" onClick={() => setStep("email")}>
-              Back to Email
-            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="ghost" className="flex-1" onClick={() => setStep("email")}>
+                Back to Email
+              </Button>
+              <Button type="button" variant="ghost" className="flex-1" onClick={() => setAuthMethod(null)}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Login Options
+              </Button>
+            </div>
           </form>
         )}
       </CardContent>

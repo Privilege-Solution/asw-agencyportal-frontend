@@ -2,16 +2,13 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Home, Users, FileText, Settings, BarChart3, Briefcase, ChevronLeft, ChevronRight } from "lucide-react"
+import { Home, Users, FileText, Settings, BarChart3, Briefcase, ChevronLeft, ChevronRight, FileTextIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const menuItems = [
-  { icon: Home, label: "Dashboard", active: true },
-  { icon: Briefcase, label: "Assets", active: false },
-  { icon: Users, label: "Clients", active: false },
-  { icon: FileText, label: "Reports", active: false },
-  { icon: BarChart3, label: "Analytics", active: false },
-  { icon: Settings, label: "Settings", active: false },
+  { icon: Home, label: "หน้าหลัก", active: true },
+  { icon: FileTextIcon, label: "รายงาน", active: false },
+  { icon: Settings, label: "ตั้งค่า", active: false },
 ]
 
 export function Sidebar() {
@@ -27,7 +24,7 @@ export function Sidebar() {
               <img
                 src="https://cdn.assetwise.co.th/wp-content/themes/seed-spring/img/asw-logo_horizontal.svg"
                 alt="AssetWise Logo"
-                className="h-8 w-auto"
+                className="w-[150px] h-auto"
               />
             </div>
           )}

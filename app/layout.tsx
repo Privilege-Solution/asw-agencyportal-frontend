@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AuthProvider } from '@/lib/auth-context'
+import { dbHeaventFont } from '@/lib/fonts'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'AssetWise Agency Portal',
+  description: 'AssetWise Agency Portal',
+  generator: 'AssetWise Dev Team',
 }
 
 export default function RootLayout({
@@ -14,7 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${dbHeaventFont.variable} font-dbHeavent`}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   )
 }
