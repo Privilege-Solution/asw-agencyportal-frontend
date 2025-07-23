@@ -1,14 +1,73 @@
 "use client"
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Shield, Mail, Building } from "lucide-react"
 import { useAuth, type AuthMethod } from "@/lib/auth-context"
+import { alert } from "@/hooks/use-alert"
 import Image from 'next/image'
 
+// Mock Microsoft auth for development - will be replaced with actual MSAL when credentials are provided
+const useMockMicrosoft = !process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || process.env.NEXT_PUBLIC_AZURE_CLIENT_ID === 'your-client-id-here'
+
 export function LoginSelector() {
-  const { setAuthMethod } = useAuth()
+  const { setAuthMethod, login } = useAuth()
+  const [isLoadingMicrosoft, setIsLoadingMicrosoft] = useState(false)
+
+  const handleMicrosoftLogin = async () => {
+    setIsLoadingMicrosoft(true)
+
+    try {
+      if (useMockMicrosoft) {
+        // Mock authentication for development
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        login('microsoft', {
+          id: 'mock-user-id',
+          email: 'user@company.com',
+          name: 'John Doe'
+        })
+      } else {
+        // Actual MSAL authentication
+        const { PublicClientApplication } = await import('@azure/msal-browser')
+        const { msalConfig, loginRequest } = await import('@/lib/msal-config')
+        
+        const msalInstance = new PublicClientApplication(msalConfig)
+        await msalInstance.initialize()
+        
+        const response = await msalInstance.loginPopup(loginRequest)
+        
+        if (response.account) {
+          login('microsoft', {
+            id: response.account.homeAccountId,
+            email: response.account.username,
+            name: response.account.name || response.account.username
+          })
+        } else {
+          throw new Error('Authentication successful but no account information received')
+        }
+      }
+    } catch (error) {
+      console.error('Microsoft authentication error:', error)
+      let errorMessage = 'Authentication failed'
+      
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === 'object' && error !== null && 'errorMessage' in error) {
+        errorMessage = String(error.errorMessage)
+      }
+      
+      // Use the new alert dialog system instead of browser alert
+      await alert({
+        title: "Authentication Error",
+        description: errorMessage,
+        confirmText: "OK",
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoadingMicrosoft(false)
+    }
+  }
 
   const handleAuthMethodSelect = (method: AuthMethod) => {
     setAuthMethod(method)
@@ -25,12 +84,15 @@ export function LoginSelector() {
       </CardHeader>
       <CardContent className="space-y-4">
         <Button
-          onClick={() => handleAuthMethodSelect('microsoft')}
+          onClick={handleMicrosoftLogin}
           variant="outline"
           className="w-full flex items-center justify-center gap-3 h-15 hover:bg-blue-50 hover:border-blue-300"
+          disabled={isLoadingMicrosoft}
         >
           <Image src="/microsoft-svg-com.svg" alt="Microsoft" width={40} height={40} />
-          <div className="text-gray-600 text-lg">Sign in with Microsoft</div>
+          <div className="text-gray-600 text-lg">
+            {isLoadingMicrosoft ? "Signing in..." : "Sign in with Microsoft"}
+          </div>
         </Button>
         
         <div className="relative">
@@ -46,6 +108,7 @@ export function LoginSelector() {
           onClick={() => handleAuthMethodSelect('email')}
           variant="outline"
           className="w-full flex items-center justify-center gap-3 h-12 hover:bg-green-50 hover:border-green-300"
+          disabled={isLoadingMicrosoft}
         >
           <Mail className="text-green-600" />
           <div className="text-gray-600">รับรหัส OTP ผ่านอีเมล</div>

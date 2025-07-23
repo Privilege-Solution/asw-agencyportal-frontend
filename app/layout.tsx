@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
 import { dbHeaventFont } from '@/lib/fonts'
+import { AlertProvider } from '@/components/ui/alert-provider'
 
 export const metadata: Metadata = {
   title: 'AssetWise Agency Portal',
@@ -19,6 +20,7 @@ export default function RootLayout({
       <body className={`${dbHeaventFont.variable} font-dbHeavent`}>
         <AuthProvider>
           {children}
+          <AlertProvider />
         </AuthProvider>
       </body>
     </html>

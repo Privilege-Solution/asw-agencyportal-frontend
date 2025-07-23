@@ -4,8 +4,8 @@ import { Configuration, LogLevel } from '@azure/msal-browser'
 // These are placeholder values that should be configured before deployment
 export const msalConfig: Configuration = {
   auth: {
-    clientId: process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || 'your-client-id-here',
-    authority: process.env.NEXT_PUBLIC_AZURE_AUTHORITY || 'https://login.microsoftonline.com/your-tenant-id',
+    clientId: process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || '',
+    authority: process.env.NEXT_PUBLIC_AZURE_AUTHORITY || '',
     redirectUri: process.env.NEXT_PUBLIC_REDIRECT_URI || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'),
     postLogoutRedirectUri: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
   },
