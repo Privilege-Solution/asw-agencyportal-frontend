@@ -1,36 +1,73 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, Users, Briefcase, DollarSign, Activity, Calendar } from "lucide-react"
+import { Activity, Calendar, Link, Plus, FileUser, Upload, UserPlus, CloudUpload, TableProperties, Webhook } from "lucide-react"
+import { WalkIcon, BookIcon, FollowUpsIcon, LeadsIcon, CircleXIcon, FormIcon } from "@/lib/icons"
+import Image from "next/image"
 
 const stats = [
   {
-    title: "Total Assets",
+    title: "Leads",
     value: "1,234",
-    change: "+12%",
-    icon: Briefcase,
+    icon: LeadsIcon,
+    iconColor: "bg-dashboard-blue",
+    backgroundColor: "bg-dashboard-blue/20",
     color: "text-blue-600",
   },
   {
-    title: "Active Clients",
+    title: "Follow-ups",
     value: "567",
-    change: "+8%",
-    icon: Users,
+    icon: FollowUpsIcon,
+    iconColor: "bg-dashboard-green",
+    backgroundColor: "bg-dashboard-green/20",
     color: "text-green-600",
   },
   {
-    title: "Revenue",
-    value: "$89,432",
-    change: "+15%",
-    icon: DollarSign,
+    title: "None Follow-ups",
+    value: "168",
+    icon: CircleXIcon,
+    iconColor: "bg-dashboard-pink",
+    backgroundColor: "bg-dashboard-pink/20",
     color: "text-yellow-600",
   },
   {
-    title: "Growth Rate",
-    value: "23.5%",
-    change: "+5%",
-    icon: TrendingUp,
+    title: "Convert to Walk",
+    value: "100",
+    icon: WalkIcon,
+    iconColor: "bg-dashboard-purple",
+    backgroundColor: "bg-dashboard-purple/20",
     color: "text-purple-600",
+  },
+  {
+    title: "Convert to Book",
+    value: "89",
+    icon: BookIcon,
+    iconColor: "bg-dashboard-blue",
+    backgroundColor: "bg-dashboard-blue/20",
+    color: "text-blue-600",
+  },
+]
+
+const addLeadsMethod = [
+  {
+    title: "Lead Form",
+    icon: UserPlus,
+    description: "เพิ่มข้อมูลผ่านแบบฟอร์ม",
+  },
+  {
+    title: "File Upload",
+    icon: CloudUpload,
+    description: "อัพโหลดไฟล์ .csv",
+  },
+  {
+    title: "Google Sheet",
+    icon: TableProperties,
+    description: "เชื่อมต่อกับ Google Sheet",
+  },
+  {
+    title: "Open API",
+    icon: Webhook,
+    description: "Open API",
   },
 ]
 
@@ -38,78 +75,42 @@ export function Dashboard() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Welcome back!</h2>
-        <p className="text-gray-600">Here's what's happening with your agency today.</p>
+        <h2 className="text-2xl font-medium text-gray-900">ยินดีต้อนรับ <span className="text-dashboard-blue">สมศรี</span></h2>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {stats.map((stat, index) => (
-          <Card key={index}>
+          <Card key={index} className={`${stat.backgroundColor}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">{stat.title}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <div className={`${stat.iconColor} w-14 h-10 rounded-2xl flex items-center justify-center`}>
+                <stat.icon />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-green-600 flex items-center mt-1">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                {stat.change} from last month
-              </p>
+              <div className="text-3xl font-medium text-center">{stat.value}</div>
+              <div className="font-medium text-gray-700 text-center">{stat.title}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Placeholder Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Activity className="h-5 w-5 mr-2" />
-              Recent Activity
-            </CardTitle>
-            <CardDescription>Latest updates from your agency</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Activity placeholder {item}</p>
-                    <p className="text-xs text-gray-500">Data will be displayed here</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2" />
-              Upcoming Events
-            </CardTitle>
-            <CardDescription>Your scheduled activities</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Calendar className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Event placeholder {item}</p>
-                    <p className="text-xs text-gray-500">Event details will be shown here</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div id="dashboard_main" className="bg-white rounded-2xl p-9">
+        <h3 className="flex items-center gap-4">
+          <Link className="w-9 h-9" />
+          <span className="text-4xl font-medium">CONNECTORS</span>
+        </h3>
+        <div id="add_leads_section" className="mt-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+            {addLeadsMethod.map((method, index) => (
+              <div key={index} className="add-leads-method method-form cursor-pointer flex items-center justify-center gap-4 border-2 border-gray-200 rounded-2xl p-4">
+                <method.icon className="w-7 h-7" />
+                <span className="text-xl font-medium">{method.title}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )

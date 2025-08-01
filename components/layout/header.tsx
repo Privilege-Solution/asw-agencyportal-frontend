@@ -11,10 +11,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 
 export function Header() {
+  const router = useRouter()
+  const { logout, user } = useAuth()
   const [isDark, setIsDark] = useState(false)
   const [language, setLanguage] = useState("EN")
+
+  const handleLogout = () => {
+    logout()
+    router.push("/auth/login")
+  }
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -24,32 +33,10 @@ export function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input placeholder="Search..." className="pl-10 w-64" />
-          </div>
-
           {/* Theme Toggle */}
           <Button variant="ghost" size="icon" onClick={() => setIsDark(!isDark)}>
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-
-          {/* Language Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Globe className="h-4 w-4 mr-1" />
-                {language}
-                <ChevronDown className="h-3 w-3 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setLanguage("EN")}>English</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage("ES")}>Español</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage("FR")}>Français</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           {/* Notifications */}
           <Button variant="ghost" size="icon">
@@ -60,10 +47,7 @@ export function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-white" />
-                </div>
-                <span className="hidden md:block">John Doe</span>
+                <span className="hidden md:block">{user?.name || "User"}</span>
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
@@ -74,7 +58,7 @@ export function Header() {
               </DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -50,9 +50,9 @@ export function Sidebar() {
                 <Button
                   variant={item.active ? "default" : "ghost"}
                   className={cn(
-                    "w-full justify-start",
-                    isCollapsed ? "px-2" : "px-3",
-                    item.active && "bg-blue-600 text-white hover:bg-blue-700",
+                    "w-full justify-start rounded-full",
+                    isCollapsed ? "px-4" : "px-5",
+                    item.active && "bg-dashboard-blue/20 text-dashboard-blue hover:text-white hover:bg-dashboard-blue",
                   )}
                 >
                   <item.icon className={cn("h-4 w-4", !isCollapsed && "mr-2")} />

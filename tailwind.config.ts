@@ -53,6 +53,12 @@ const config: Config = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
+				dashboard: {
+					blue: 'hsl(var(--dashboard-blue))',
+					green: 'hsl(var(--dashboard-green))',
+					pink: 'hsl(var(--dashboard-pink))',
+					purple: 'hsl(var(--dashboard-purple))'
+				},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',
