@@ -4,6 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Activity, Calendar, Link, Plus, FileUser, Upload, UserPlus, CloudUpload, TableProperties, Webhook } from "lucide-react"
 import { WalkIcon, BookIcon, FollowUpsIcon, LeadsIcon, CircleXIcon, FormIcon } from "@/lib/icons"
 import Image from "next/image"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "../ui/dialog"
+import { useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import LeadFormDialog from "./LeadFormDialog"
 
 const stats = [
   {
@@ -52,30 +56,37 @@ const addLeadsMethod = [
   {
     title: "Lead Form",
     icon: UserPlus,
+    key: "lead_form",
     description: "เพิ่มข้อมูลผ่านแบบฟอร์ม",
   },
   {
     title: "File Upload",
     icon: CloudUpload,
+    key: "file_upload",
     description: "อัพโหลดไฟล์ .csv",
   },
   {
     title: "Google Sheet",
     icon: TableProperties,
+    key: "google_sheet",
     description: "เชื่อมต่อกับ Google Sheet",
   },
   {
     title: "Open API",
     icon: Webhook,
+    key: "open_api",
     description: "Open API",
   },
 ]
 
 export function Dashboard() {
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
+  const { user } = useAuth()
+
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-medium text-gray-900">ยินดีต้อนรับ <span className="text-dashboard-blue">สมศรี</span></h2>
+        <h2 className="text-2xl font-medium text-gray-900">ยินดีต้อนรับ <span className="text-dashboard-blue">{user?.name}</span></h2>
       </div>
 
       {/* Stats Grid */}
@@ -98,13 +109,14 @@ export function Dashboard() {
       {/* Placeholder Content */}
       <div id="dashboard_main" className="bg-white rounded-2xl p-9">
         <h3 className="flex items-center gap-4">
-          <Link className="w-9 h-9" />
-          <span className="text-4xl font-medium">CONNECTORS</span>
+          <Link className="w-8 h-8" />
+          <span className="text-2xl font-medium">CONNECTORS</span>
         </h3>
+        
         <div id="add_leads_section" className="mt-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             {addLeadsMethod.map((method, index) => (
-              <div key={index} className="add-leads-method method-form cursor-pointer flex items-center justify-center gap-4 border-2 border-gray-200 rounded-2xl p-4">
+              <div key={index} className="add-leads-method method-form cursor-pointer flex items-center justify-center gap-4 border-2 border-gray-200 rounded-2xl p-4 hover:bg-gray-50" onClick={() => setSelectedMethod(method.key)}>
                 <method.icon className="w-7 h-7" />
                 <span className="text-xl font-medium">{method.title}</span>
               </div>
@@ -112,6 +124,16 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+
+      <LeadFormDialog selectedMethod={selectedMethod} setSelectedMethod={setSelectedMethod} />
+
+      <Dialog open={selectedMethod === 'file_upload'} onOpenChange={() => setSelectedMethod(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Leads</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

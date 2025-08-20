@@ -5,8 +5,8 @@ import { dbHeaventFont } from '@/lib/fonts'
 import { AlertProvider } from '@/components/ui/alert-provider'
 
 export const metadata: Metadata = {
-  title: 'AssetWise Agency Portal',
-  description: 'AssetWise Agency Portal',
+  title: 'Agency Portal',
+  description: 'Agency Portal',
   generator: 'AssetWise Dev Team',
 }
 
