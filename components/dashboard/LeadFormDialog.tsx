@@ -8,6 +8,12 @@ function LeadFormDialog({ selectedMethod, setSelectedMethod }: { selectedMethod:
   const [utmData, setUtmData] = useState<string[]>([])
   const [leadData, setLeadData] = useState<Lead>()
 
+  const handleCancel = () => {
+    setSelectedMethod(null)
+    setUtmData([])
+    setSourceUrl('')
+  }
+
   useEffect(() => {
     if (sourceUrl) {
       try {
@@ -22,7 +28,7 @@ function LeadFormDialog({ selectedMethod, setSelectedMethod }: { selectedMethod:
   }, [sourceUrl])
 
   return (
-    <Dialog open={selectedMethod === 'lead_form'} onOpenChange={() => setSelectedMethod(null)}>
+    <Dialog open={selectedMethod === 'lead_form'} onOpenChange={handleCancel}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>เพิ่มข้อมูลผ่านแบบฟอร์ม</DialogTitle>
