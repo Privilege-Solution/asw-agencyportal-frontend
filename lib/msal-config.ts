@@ -10,8 +10,8 @@ export const msalConfig: Configuration = {
     postLogoutRedirectUri: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
   },
   cache: {
-    cacheLocation: 'sessionStorage',
-    storeAuthStateInCookie: false,
+    cacheLocation: 'localStorage', // Changed from sessionStorage to localStorage for better persistence
+    storeAuthStateInCookie: true, // Store auth state in cookies for better security and cross-tab support
   },
   system: {
     loggerOptions: {
@@ -40,5 +40,5 @@ export const msalConfig: Configuration = {
 
 // Add scopes for additional permissions as needed
 export const loginRequest = {
-  scopes: ['User.Read', 'profile', 'email', 'openid']
+  scopes: [`api://${process.env.NEXT_PUBLIC_AZURE_CLIENT_ID}/agency-scope`]
 } 

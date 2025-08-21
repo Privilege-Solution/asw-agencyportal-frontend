@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { cookieUtils } from './cookie-utils'
 
 export type AuthMethod = 'microsoft' | 'email'
 
@@ -15,7 +16,7 @@ export interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (method: AuthMethod, userData?: Partial<User>) => void
+  login: (method: AuthMethod, userData?: Partial<User>, token?: string) => void
   logout: () => void
   setAuthMethod: (method: AuthMethod | null) => void
   currentAuthMethod: AuthMethod | null
@@ -32,13 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = () => {
       try {
-        const savedUser = localStorage.getItem('auth_user')
+        const savedUser = cookieUtils.getAuthUser()
         if (savedUser) {
-          setUser(JSON.parse(savedUser))
+          setUser(savedUser)
         }
       } catch (error) {
         console.error('Error checking authentication:', error)
-        localStorage.removeItem('auth_user')
+        cookieUtils.removeAuthUser()
       } finally {
         setIsLoading(false)
       }
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
   }, [])
 
-  const login = (method: AuthMethod, userData?: Partial<User>) => {
+  const login = (method: AuthMethod, userData?: Partial<User>, token?: string) => {
     const newUser: User = {
       id: userData?.id || 'user-' + Date.now(),
       email: userData?.email || '',
@@ -56,13 +57,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     setUser(newUser)
-    localStorage.setItem('auth_user', JSON.stringify(newUser))
+    cookieUtils.setAuthUser(newUser)
+    
+    // Store auth token if provided
+    if (token) {
+      cookieUtils.setAuthToken(token)
+    }
+    
     setCurrentAuthMethod(null) // Reset auth method selection
   }
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem('auth_user')
+    cookieUtils.clearAllAuthCookies()
     setCurrentAuthMethod(null)
     
     // Additional cleanup for Microsoft auth if needed

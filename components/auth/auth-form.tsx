@@ -44,11 +44,14 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
     await new Promise((resolve) => setTimeout(resolve, 1000))
     setIsLoading(false)
     
+    // Generate a mock OTP token for this session
+    const otpToken = 'otp-token-' + email + '-' + Date.now()
+    
     // Login with email OTP
     login('email', {
       email: email,
       name: email.split('@')[0]
-    })
+    }, otpToken)
   }
 
   return (

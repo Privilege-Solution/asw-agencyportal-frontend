@@ -22,11 +22,12 @@ export function LoginSelector() {
       if (useMockMicrosoft) {
         // Mock authentication for development
         await new Promise(resolve => setTimeout(resolve, 1500))
+        const mockToken = 'mock-access-token-' + Date.now()
         login('microsoft', {
           id: 'mock-user-id',
           email: 'user@company.com',
           name: 'John Doe'
-        })
+        }, mockToken)
       } else {
         // Actual MSAL authentication
         const { PublicClientApplication } = await import('@azure/msal-browser')
@@ -38,11 +39,14 @@ export function LoginSelector() {
         const response = await msalInstance.loginPopup(loginRequest)
         
         if (response.account) {
+          // Extract access token from the response
+          const accessToken = response.accessToken
+          
           login('microsoft', {
             id: response.account.homeAccountId,
             email: response.account.username,
             name: response.account.name || response.account.username
-          })
+          }, accessToken)
         } else {
           throw new Error('Authentication successful but no account information received')
         }

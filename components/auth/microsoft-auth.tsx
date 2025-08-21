@@ -23,11 +23,12 @@ export function MicrosoftAuth() {
       if (useMockMicrosoft) {
         // Mock authentication for development
         await new Promise(resolve => setTimeout(resolve, 1500))
+        const mockToken = 'mock-access-token-' + Date.now()
         login('microsoft', {
           id: 'mock-user-id',
           email: 'user@company.com',
           name: 'John Doe'
-        })
+        }, mockToken)
       } else {
         // TODO: Implement actual MSAL authentication when credentials are configured
         // const { PublicClientApplication } = await import('@azure/msal-browser')
@@ -38,11 +39,14 @@ export function MicrosoftAuth() {
         // 
         // const response = await msalInstance.loginPopup(loginRequest)
         // 
-        // login('microsoft', {
-        //   id: response.account?.homeAccountId,
-        //   email: response.account?.username,
-        //   name: response.account?.name || response.account?.username
-        // })
+        // if (response.account) {
+        //   const accessToken = response.accessToken
+        //   login('microsoft', {
+        //     id: response.account.homeAccountId,
+        //     email: response.account.username,
+        //     name: response.account.name || response.account.username
+        //   }, accessToken)
+        // }
 
         throw new Error('Microsoft SSO credentials not configured. Please configure Azure AD settings.')
       }

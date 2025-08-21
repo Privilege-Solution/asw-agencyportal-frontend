@@ -1,13 +1,12 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Activity, Calendar, Link, Plus, FileUser, Upload, UserPlus, CloudUpload, TableProperties, Webhook } from "lucide-react"
-import { WalkIcon, BookIcon, FollowUpsIcon, LeadsIcon, CircleXIcon, FormIcon } from "@/lib/icons"
-import Image from "next/image"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "../ui/dialog"
-import { useState } from "react"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Link, UserPlus, CloudUpload, TableProperties, Webhook } from "lucide-react"
+import { WalkIcon, BookIcon, FollowUpsIcon, LeadsIcon, CircleXIcon } from "@/lib/icons"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
-import LeadFormDialog from "./LeadFormDialog"
+import ConnectorsTabs from "@/components/ui/connectors-tabs"
+import { SimpleApiTest } from "@/components/test/SimpleApiTest"
 
 const stats = [
   {
@@ -83,6 +82,28 @@ export function Dashboard() {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
   const { user } = useAuth()
 
+  // Load test functions for console use
+  useEffect(() => {
+    const loadTestFunctions = async () => {
+      try {
+        // Only load in client environment
+        if (typeof window !== 'undefined') {
+          // Load simple test first (no complex dependencies)
+          await import('@/lib/simple-test')
+          // Try to load the advanced test functions
+          try {
+            await import('@/lib/quick-test')
+          } catch (advancedError) {
+            console.warn('Advanced test functions not available:', advancedError)
+          }
+        }
+      } catch (error) {
+        console.warn('Could not load test functions:', error)
+      }
+    }
+    loadTestFunctions()
+  }, [])
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -112,28 +133,32 @@ export function Dashboard() {
           <Link className="w-8 h-8" />
           <span className="text-2xl font-medium">CONNECTORS</span>
         </h3>
+
+        <ConnectorsTabs />
         
-        <div id="add_leads_section" className="mt-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-            {addLeadsMethod.map((method, index) => (
-              <div key={index} className="add-leads-method method-form cursor-pointer flex items-center justify-center gap-4 border-2 border-gray-200 rounded-2xl p-4 hover:bg-gray-50" onClick={() => setSelectedMethod(method.key)}>
-                <method.icon className="w-7 h-7" />
-                <span className="text-xl font-medium">{method.title}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
-      <LeadFormDialog selectedMethod={selectedMethod} setSelectedMethod={setSelectedMethod} />
-
-      <Dialog open={selectedMethod === 'file_upload'} onOpenChange={() => setSelectedMethod(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Leads</DialogTitle>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      {/* GetUser API Test Section */}
+      <div className="mt-8 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-medium">API Testing</h3>
+          <div className="flex gap-4 text-sm">
+            <a 
+              href="/dashboard/api-test-client" 
+              className="text-green-600 hover:text-green-800 font-medium"
+            >
+              Client-Only Test →
+            </a>
+            <a 
+              href="/dashboard/api-test" 
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Full Test Page →
+            </a>
+          </div>
+        </div>
+        <SimpleApiTest />
+      </div>
     </div>
   )
 }
