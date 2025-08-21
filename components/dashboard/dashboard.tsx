@@ -7,6 +7,10 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import ConnectorsTabs from "@/components/ui/connectors-tabs"
 import { SimpleApiTest } from "@/components/test/SimpleApiTest"
+import { RoleGuard, SuperAdminOnly, AdminAndUp } from "@/components/rbac/RoleGuard"
+import { PERMISSIONS, VIEWS, ROLE_NAMES } from "@/lib/types/roles"
+import { Badge } from "@/components/ui/badge"
+import { RoleTestPanel } from "@/components/rbac/RoleTestPanel"
 
 const stats = [
   {
@@ -83,31 +87,50 @@ export function Dashboard() {
   const { user } = useAuth()
 
   // Load test functions for console use
-  useEffect(() => {
-    const loadTestFunctions = async () => {
-      try {
-        // Only load in client environment
-        if (typeof window !== 'undefined') {
-          // Load simple test first (no complex dependencies)
-          await import('@/lib/simple-test')
-          // Try to load the advanced test functions
-          try {
-            await import('@/lib/quick-test')
-          } catch (advancedError) {
-            console.warn('Advanced test functions not available:', advancedError)
-          }
-        }
-      } catch (error) {
-        console.warn('Could not load test functions:', error)
-      }
-    }
-    loadTestFunctions()
-  }, [])
+  // useEffect(() => {
+  //   const loadTestFunctions = async () => {
+  //     try {
+  //       // Only load in client environment
+  //       if (typeof window !== 'undefined') {
+  //         // Load simple test first (no complex dependencies)
+  //         await import('@/lib/simple-test')
+  //         // Try to load the advanced test functions
+  //         try {
+  //           await import('@/lib/quick-test')
+  //         } catch (advancedError) {
+  //           console.warn('Advanced test functions not available:', advancedError)
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.warn('Could not load test functions:', error)
+  //     }
+  //   }
+  //   loadTestFunctions()
+  // }, [])
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-medium text-gray-900">ยินดีต้อนรับ <span className="text-dashboard-blue">{user?.name}</span></h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-medium text-gray-900">
+            ยินดีต้อนรับ <span className="text-dashboard-blue">{user?.name}</span>
+          </h2>
+          {user && (
+            <div className="flex items-center gap-2">
+              <Badge variant={user.role === 1 ? "destructive" : user.role === 2 ? "default" : "secondary"}>
+                {ROLE_NAMES[user.role]}
+              </Badge>
+              {user.departmentName && (
+                <Badge variant="outline">{user.departmentName}</Badge>
+              )}
+            </div>
+          )}
+        </div>
+        {user?.role === 3 && user?.agencyId && (
+          <p className="text-sm text-gray-600 mt-1">
+            Agency ID: {user.agencyId} • You can only view your own data
+          </p>
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -127,38 +150,100 @@ export function Dashboard() {
         ))}
       </div>
 
-      {/* Placeholder Content */}
-      <div id="dashboard_main" className="bg-white rounded-2xl p-9">
-        <h3 className="flex items-center gap-4">
-          <Link className="w-8 h-8" />
-          <span className="text-2xl font-medium">CONNECTORS</span>
-        </h3>
-
-        <ConnectorsTabs />
-        
-      </div>
-
-      {/* GetUser API Test Section */}
-      <div className="mt-8 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-medium">API Testing</h3>
-          <div className="flex gap-4 text-sm">
-            <a 
-              href="/dashboard/api-test-client" 
-              className="text-green-600 hover:text-green-800 font-medium"
-            >
-              Client-Only Test →
-            </a>
-            <a 
-              href="/dashboard/api-test" 
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Full Test Page →
-            </a>
-          </div>
+      {/* Role-based Content Sections */}
+      
+      {/* Connectors - Available to all roles */}
+      <RoleGuard requiredView={VIEWS.LEADS}>
+        <div id="dashboard_main" className="bg-white rounded-2xl p-9 mb-8">
+          <h3 className="flex items-center gap-4">
+            <Link className="w-8 h-8" />
+            <span className="text-2xl font-medium">CONNECTORS</span>
+          </h3>
+          <ConnectorsTabs />
         </div>
-        <SimpleApiTest />
-      </div>
+      </RoleGuard>
+
+      {/* API Testing - Admin and Super Admin only */}
+      <AdminAndUp>
+        <div className="mt-8 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-medium">API Testing</h3>
+            <div className="flex gap-4 text-sm">
+              <a 
+                href="/dashboard/api-test-client" 
+                className="text-green-600 hover:text-green-800 font-medium"
+              >
+                Client-Only Test →
+              </a>
+              <a 
+                href="/dashboard/api-test" 
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Full Test Page →
+              </a>
+            </div>
+          </div>
+          <SimpleApiTest />
+        </div>
+      </AdminAndUp>
+
+      {/* Super Admin Only Section */}
+      <SuperAdminOnly>
+        <div className="mt-8">
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader>
+              <h3 className="text-xl font-medium text-red-800">Super Admin Controls</h3>
+            </CardHeader>
+            <CardContent>
+              <p className="text-red-700 mb-4">
+                These controls are only visible to Super Admins and affect system-wide settings.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h4 className="font-medium mb-2">Site Settings</h4>
+                    <p className="text-sm text-gray-600">Configure system-wide settings, themes, and preferences.</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h4 className="font-medium mb-2">System Logs</h4>
+                    <p className="text-sm text-gray-600">View system logs and monitor application health.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </SuperAdminOnly>
+
+      {/* Agency User Info */}
+      <RoleGuard allowedRoles={[3]}>
+        <div className="mt-8">
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <h3 className="text-xl font-medium text-blue-800">Agency Dashboard</h3>
+            </CardHeader>
+            <CardContent>
+              <p className="text-blue-700 mb-4">
+                Welcome to your agency dashboard. You can view and manage your leads and data.
+              </p>
+              <div className="space-y-2 text-sm">
+                <p><strong>Data Access:</strong> Limited to your agency data only</p>
+                <p><strong>Available Features:</strong> Lead management, file uploads</p>
+                <p><strong>Need more access?</strong> Contact your administrator</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </RoleGuard>
+
+      {/* Role Testing Panel - Development Only */}
+      <AdminAndUp>
+        <div className="mt-8">
+          <RoleTestPanel />
+        </div>
+      </AdminAndUp>
     </div>
   )
 }
