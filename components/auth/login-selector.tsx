@@ -23,11 +23,31 @@ export function LoginSelector() {
         // Mock authentication for development
         await new Promise(resolve => setTimeout(resolve, 1500))
         const mockToken = 'mock-access-token-' + Date.now()
+        
+        // First, login with basic info and token
         login('microsoft', {
           id: 'mock-user-id',
           email: 'user@company.com',
-          name: 'John Doe'
+          displayName: 'John Doe'
         }, mockToken)
+        
+        // Then fetch complete user data from API
+        const response = await fetch('/api/user', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (response.ok) {
+          const userData = await response.json()
+          console.log('✅ Complete user data fetched after Microsoft login:', userData)
+          
+          // Update user with complete data
+          login('microsoft', userData.data, mockToken)
+        } else {
+          console.warn('Could not fetch complete user data, using basic info')
+        }
       } else {
         // Actual MSAL authentication
         const { PublicClientApplication } = await import('@azure/msal-browser')
@@ -42,11 +62,30 @@ export function LoginSelector() {
           // Extract access token from the response
           const accessToken = response.accessToken
           
+          // First, login with basic info and token
           login('microsoft', {
             id: response.account.homeAccountId,
             email: response.account.username,
-            name: response.account.name || response.account.username
+            displayName: response.account.name || response.account.username
           }, accessToken)
+          
+          // Then fetch complete user data from API
+          const userResponse = await fetch('/api/user', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+
+          if (userResponse.ok) {
+            const userData = await userResponse.json()
+            console.log('✅ Complete user data fetched after Microsoft login:', userData)
+            
+            // Update user with complete data
+            login('microsoft', userData.data, accessToken)
+          } else {
+            console.warn('Could not fetch complete user data, using basic info')
+          }
         } else {
           throw new Error('Authentication successful but no account information received')
         }

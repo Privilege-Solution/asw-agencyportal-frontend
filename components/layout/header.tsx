@@ -47,7 +47,7 @@ export function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2">
-                <span className="hidden md:block">{user?.name || "User"}</span>
+                <span className="hidden md:block">{user?.displayName || "User"}</span>
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>

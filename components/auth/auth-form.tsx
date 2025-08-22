@@ -40,18 +40,39 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
     }
 
     setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
     
-    // Generate a mock OTP token for this session
-    const otpToken = 'otp-token-' + email + '-' + Date.now()
-    
-    // Login with email OTP
-    login('email', {
-      email: email,
-      name: email.split('@')[0]
-    }, otpToken)
+    try {
+      // Generate a mock OTP token for this session
+      const otpToken = 'otp-token-' + email + '-' + Date.now()
+      
+      // First, login with basic info and token
+      login('email', {
+        email: email,
+        displayName: email.split('@')[0]
+      }, otpToken)
+      
+      // Then fetch complete user data from API
+      const response = await fetch('/api/user', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const userData = await response.json()
+        console.log('✅ Complete user data fetched after OTP login:', userData)
+        
+        // Update user with complete data
+        login('email', userData.data, otpToken)
+      } else {
+        console.warn('Could not fetch complete user data, using basic info')
+      }
+    } catch (error) {
+      console.error('Error fetching user data after OTP login:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

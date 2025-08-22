@@ -49,8 +49,20 @@ export async function GET(request: NextRequest) {
     const userData = await response.json()
     console.log('✅ Server: GetUser API Success:', userData)
 
-    // Return the user data
-    return NextResponse.json(userData)
+    // Map the API response to include role information for RBAC
+    const mappedUserData = {
+      ...userData,
+      // Map userRoleID to our RBAC role system
+      role: userData.userRoleID === 1 ? 1 : // Super Admin
+            userData.userRoleID === 2 ? 2 : // Admin  
+            userData.userRoleID === 3 ? 3 : // Agency
+            3, // Default to Agency if unknown
+      // Preserve original API structure
+      originalUserData: userData
+    }
+
+    // Return the enhanced user data
+    return NextResponse.json(mappedUserData)
 
   } catch (error) {
     console.error('❌ Server: Error in GetUser API route:', error)

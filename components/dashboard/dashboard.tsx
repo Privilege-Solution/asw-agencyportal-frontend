@@ -8,9 +8,9 @@ import { useAuth } from "@/lib/auth-context"
 import ConnectorsTabs from "@/components/ui/connectors-tabs"
 import { SimpleApiTest } from "@/components/test/SimpleApiTest"
 import { RoleGuard, SuperAdminOnly, AdminAndUp } from "@/components/rbac/RoleGuard"
-import { PERMISSIONS, VIEWS, ROLE_NAMES } from "@/lib/types/roles"
+import { PERMISSIONS, VIEWS, ROLE_NAMES, UserRole } from "@/lib/types/roles"
 import { Badge } from "@/components/ui/badge"
-import { RoleTestPanel } from "@/components/rbac/RoleTestPanel"
+import { UserDataSync } from "@/components/auth/UserDataSync"
 
 const stats = [
   {
@@ -86,39 +86,26 @@ export function Dashboard() {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
   const { user } = useAuth()
 
-  // Load test functions for console use
-  // useEffect(() => {
-  //   const loadTestFunctions = async () => {
-  //     try {
-  //       // Only load in client environment
-  //       if (typeof window !== 'undefined') {
-  //         // Load simple test first (no complex dependencies)
-  //         await import('@/lib/simple-test')
-  //         // Try to load the advanced test functions
-  //         try {
-  //           await import('@/lib/quick-test')
-  //         } catch (advancedError) {
-  //           console.warn('Advanced test functions not available:', advancedError)
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.warn('Could not load test functions:', error)
-  //     }
-  //   }
-  //   loadTestFunctions()
-  // }, [])
+  // Load debug utilities in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      import('@/lib/debug-roles').catch(console.warn)
+      import('@/lib/force-role-refresh').catch(console.warn)
+    }
+  }, [])
+
 
   return (
     <div className="p-6">
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-medium text-gray-900">
-            ยินดีต้อนรับ <span className="text-dashboard-blue">{user?.name}</span>
+            ยินดีต้อนรับ <span className="text-dashboard-blue">{user?.displayName}</span>
           </h2>
           {user && (
             <div className="flex items-center gap-2">
-              <Badge variant={user.role === 1 ? "destructive" : user.role === 2 ? "default" : "secondary"}>
-                {ROLE_NAMES[user.role]}
+              <Badge variant={user.userRoleID === 1 ? "destructive" : user.userRoleID === 2 ? "default" : "secondary"}>
+                {ROLE_NAMES[user.userRoleID as UserRole]}
               </Badge>
               {user.departmentName && (
                 <Badge variant="outline">{user.departmentName}</Badge>
@@ -126,9 +113,9 @@ export function Dashboard() {
             </div>
           )}
         </div>
-        {user?.role === 3 && user?.agencyId && (
+        {user?.userRoleID === 3 && user?.departmentID && (
           <p className="text-sm text-gray-600 mt-1">
-            Agency ID: {user.agencyId} • You can only view your own data
+            Agency ID: {user.departmentID} • You can only view your own data
           </p>
         )}
       </div>
@@ -238,12 +225,14 @@ export function Dashboard() {
         </div>
       </RoleGuard>
 
-      {/* Role Testing Panel - Development Only */}
+      {/* User Data Sync - For monitoring role changes */}
       <AdminAndUp>
         <div className="mt-8">
-          <RoleTestPanel />
+          <UserDataSync />
         </div>
       </AdminAndUp>
+
+
     </div>
   )
 }

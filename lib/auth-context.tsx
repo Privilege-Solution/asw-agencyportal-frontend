@@ -5,25 +5,9 @@ import { cookieUtils } from './cookie-utils'
 import { UserRole, USER_ROLES } from './types/roles'
 import { hasPermission, canAccessView, getUserPermissions, getUserViews } from './rbac'
 import type { Permission, View } from './types/roles'
+import { User } from '@/app/types'
 
 export type AuthMethod = 'microsoft' | 'email'
-
-export interface User {
-  id: string
-  email: string
-  name: string
-  authMethod: AuthMethod
-  role: UserRole
-  subRole?: string
-  agencyId?: string
-  // API response fields
-  userRoleID?: number
-  userRoleName?: string
-  departmentID?: number
-  departmentName?: string
-  jobTitle?: string
-  projectIDs?: number[]
-}
 
 export interface AuthContextType {
   user: User | null
@@ -50,13 +34,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [currentAuthMethod, setCurrentAuthMethod] = useState<AuthMethod | null>(null)
 
-  // Check for existing authentication on mount
+  // Check for existing authentication on mount and fetch fresh user data
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {      
       try {
         const savedUser = cookieUtils.getAuthUser()
-        if (savedUser) {
+        const authToken = cookieUtils.getAuthToken()
+        
+        if (savedUser && authToken) {
+          // Set saved user first for immediate UI
           setUser(savedUser)
+          
+          // Then fetch fresh user data from API to ensure role is up to date
+          try {
+            const response = await fetch('/api/user', {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
+
+            if (response.ok) {
+              const freshUserData = await response.json()
+              const userData = freshUserData.data
+              console.log('🔄 Refreshed user data from API:', userData)
+              console.log('📊 Role mapping check:', {
+                apiUserRoleID: userData.userRoleID,
+                apiMappedRole: userData.userRoleName,
+                savedUserRole: savedUser.userRoleName
+              })
+              
+              // Update with fresh data
+              const updatedUser: User = {
+                id: userData.id || userData.employeeId || savedUser.id,
+                email: userData.email || savedUser.email,
+                displayName: userData.displayName || userData.givenName || savedUser.displayName,
+                givenName: userData.givenName || savedUser.givenName,
+                surename: userData.surename || savedUser.surename,
+                userRoleID: userData.userRoleID,
+                userRoleName: userData.userRoleName,
+                departmentID: userData.departmentID,
+                departmentName: userData.departmentName,
+                jobTitle: userData.jobTitle,
+                projectIDs: userData.projectIDs,
+                createBy: userData.createBy,
+                createDate: userData.createDate,
+                updateBy: userData.updateBy,
+                updateDate: userData.updateDate,
+                isActive: userData.isActive
+              }
+
+              console.log('ffetched user data', userData);
+              
+              // Validate userRoleID - must be 1, 2, or 3
+              if (![1, 2, 3].includes(userData.userRoleID)) {
+                console.error('❌ Invalid userRoleID detected:', userData.userRoleID, '- Logging out user')
+                logout()
+                return
+              }
+              
+              console.log('✅ Updated user with fresh data:', {
+                userRoleID: updatedUser.userRoleID,
+                role: updatedUser.userRoleID === 1 ? USER_ROLES.SUPER_ADMIN : updatedUser.userRoleID === 2 ? USER_ROLES.ADMIN : USER_ROLES.AGENCY,
+                userRoleName: updatedUser.userRoleName
+              })
+              
+              setUser(updatedUser)
+              cookieUtils.setAuthUser(updatedUser)
+            }
+          } catch (apiError) {
+            console.warn('Could not refresh user data from API:', apiError)
+            // Keep using saved user data if API fails
+          }
         }
       } catch (error) {
         console.error('Error checking authentication:', error)
@@ -64,38 +113,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         setIsLoading(false)
       }
-    }
+    }    
 
     checkAuth()
   }, [])
 
   const login = (method: AuthMethod, userData?: Partial<User>, token?: string) => {
-    // Map userRoleID to our role system (for backward compatibility)
-    let role: UserRole = USER_ROLES.AGENCY // Default role
+    console.log('🔄 User data:', userData)
     
-    if (userData?.userRoleID === 1 || userData?.role === USER_ROLES.SUPER_ADMIN) {
-      role = USER_ROLES.SUPER_ADMIN
-    } else if (userData?.userRoleID === 2 || userData?.role === USER_ROLES.ADMIN) {
-      role = USER_ROLES.ADMIN
-    } else if (userData?.userRoleID === 3 || userData?.role === USER_ROLES.AGENCY) {
-      role = USER_ROLES.AGENCY
+    // Validate userRoleID - must be 1, 2, or 3 (null/undefined not allowed)
+    if (!userData?.userRoleID || ![1, 2, 3].includes(userData.userRoleID)) {
+      console.error('❌ Invalid or missing userRoleID detected:', userData?.userRoleID, '- Login denied')
+      return // Don't login, don't logout (user was never logged in)
     }
+    
+    // Map userRoleID to role
+    const role: UserRole = userData.userRoleID === 1 ? USER_ROLES.SUPER_ADMIN : 
+                          userData.userRoleID === 2 ? USER_ROLES.ADMIN : 
+                          USER_ROLES.AGENCY
+
+    console.log('🔄 Login mapping:', {
+      userRoleID: userData.userRoleID,
+      finalRole: role,
+      mapping: `userRoleID ${userData.userRoleID} -> role ${role}`
+    })
 
     const newUser: User = {
       id: userData?.id || 'user-' + Date.now(),
       email: userData?.email || '',
-      name: userData?.name || userData?.email || 'User',
-      authMethod: method,
-      role,
-      subRole: userData?.subRole,
-      agencyId: userData?.agencyId,
-      // Preserve API fields
-      userRoleID: userData?.userRoleID,
-      userRoleName: userData?.userRoleName,
-      departmentID: userData?.departmentID,
-      departmentName: userData?.departmentName,
-      jobTitle: userData?.jobTitle,
-      projectIDs: userData?.projectIDs
+      displayName: userData?.displayName || userData?.givenName || userData?.surename || 'User',
+      givenName: userData?.givenName || '',
+      surename: userData?.surename || '',
+      userRoleID: userData?.userRoleID || 0,
+      userRoleName: userData?.userRoleName || '',
+      departmentID: userData?.departmentID || 0,
+      departmentName: userData?.departmentName || '',
+      jobTitle: userData?.jobTitle || '',
+      projectIDs: userData?.projectIDs || [],
+      createBy: userData?.createBy || '',
+      createDate: userData?.createDate || '',
+      updateBy: userData?.updateBy || '',
+      updateDate: userData?.updateDate || '',
+      isActive: userData?.isActive || false
     }
     
     setUser(newUser)
@@ -115,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentAuthMethod(null)
     
     // Additional cleanup for Microsoft auth if needed
-    if (user?.authMethod === 'microsoft') {
+    if (user?.userRoleID === 1) {
       // MSAL logout will be handled in the Microsoft component
     }
   }
@@ -126,38 +185,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Role-based helper functions
   const userHasPermission = (permission: Permission) => {
-    if (!user) return false
-    return hasPermission(user.role, permission)
+    if (!user || !user.userRoleID) return false
+    return hasPermission(user.userRoleID as UserRole, permission)
   }
 
   const userCanAccessView = (view: View) => {
-    if (!user) return false
-    return canAccessView(user.role, view)
+    if (!user || !user.userRoleID) return false
+    return canAccessView(user.userRoleID as UserRole, view)
   }
 
   const userGetPermissions = () => {
-    if (!user) return []
-    return getUserPermissions(user.role)
+    if (!user || !user.userRoleID) return []
+    return getUserPermissions(user.userRoleID as UserRole)
   }
 
   const userGetViews = () => {
-    if (!user) return []
-    return getUserViews(user.role)
+    if (!user || !user.userRoleID) return []
+    return getUserViews(user.userRoleID as UserRole)
   }
 
   const userIsSuperAdmin = () => {
     if (!user) return false
-    return user.role === USER_ROLES.SUPER_ADMIN
+    return user.userRoleID === USER_ROLES.SUPER_ADMIN
   }
 
   const userIsAdmin = () => {
     if (!user) return false
-    return user.role === USER_ROLES.ADMIN || user.role === USER_ROLES.SUPER_ADMIN
+    return user.userRoleID === USER_ROLES.ADMIN || user.userRoleID === USER_ROLES.SUPER_ADMIN
   }
 
   const userIsAgency = () => {
     if (!user) return false
-    return user.role === USER_ROLES.AGENCY
+    return user.userRoleID === USER_ROLES.AGENCY
   }
 
   const value: AuthContextType = {
