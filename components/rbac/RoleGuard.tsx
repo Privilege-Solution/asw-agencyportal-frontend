@@ -54,11 +54,11 @@ export function RoleGuard({
   }
 
   // Check role-based access
-  if (requiredRole && user.role > requiredRole) {
+  if (requiredRole && user.userRoleID && user.userRoleID > requiredRole) {
     return <>{fallback}</>
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user.userRoleID && !allowedRoles.includes(user.userRoleID as UserRole)) {
     return <>{fallback}</>
   }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Link, UserPlus, CloudUpload, TableProperties, Webhook } from "lucide-react"
 import { WalkIcon, BookIcon, FollowUpsIcon, LeadsIcon, CircleXIcon } from "@/lib/icons"
 import { useState, useEffect } from "react"
@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge"
 import { UserDataSync } from "@/components/auth/UserDataSync"
 import { Button } from "@/components/ui/button"
 import { AuthDebugger } from "@/components/test/AuthDebugger"
+import LeadForm from "../methods/LeadForm"
+import LeadsMethod from "./LeadsMethod"
 
 const stats = [
   {
@@ -63,24 +65,28 @@ const addLeadsMethod = [
     icon: UserPlus,
     key: "lead_form",
     description: "เพิ่มข้อมูลผ่านแบบฟอร์ม",
+    isActive: true,
   },
   {
     title: "File Upload",
     icon: CloudUpload,
     key: "file_upload",
     description: "อัพโหลดไฟล์ .csv",
+    isActive: true,
   },
   {
     title: "Google Sheet",
     icon: TableProperties,
     key: "google_sheet",
     description: "เชื่อมต่อกับ Google Sheet",
+    isActive: false,
   },
   {
     title: "Open API",
     icon: Webhook,
     key: "open_api",
     description: "Open API",
+    isActive: false,
   },
 ]
 
@@ -97,11 +103,16 @@ export function Dashboard() {
   }, [])
 
   // Debug user data
-  useEffect(() => {
-    console.log('🔍 Dashboard: User data:', user);
-    console.log('🔍 Dashboard: User role ID:', user?.userRoleID);
-    console.log('🔍 Dashboard: User display name:', user?.displayName);
-  }, [user])
+  // useEffect(() => {
+  //   console.log('🔍 Dashboard: User data:', user);
+  //   console.log('🔍 Dashboard: User role ID:', user?.userRoleID);
+  //   console.log('🔍 Dashboard: User display name:', user?.displayName);
+  // }, [user])
+
+  const handleSelectMethod = (method: string) => {
+    setSelectedMethod(method)
+    document.getElementById('addLeadsPanel')?.scrollIntoView({ behavior: 'smooth' })
+  }
 
 
   return (
@@ -118,7 +129,7 @@ export function Dashboard() {
               </Badge>
               {user.departmentName && (
                 <Badge variant="outline">{user.departmentName}</Badge>
-              )}
+              )}  
             </div>
           )}
         </div>
@@ -132,32 +143,25 @@ export function Dashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {stats.map((stat, index) => (
-          <Card key={index} className={`${stat.backgroundColor}`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className={`${stat.iconColor} w-14 h-10 rounded-2xl flex items-center justify-center`}>
-                <stat.icon />
+          <Card key={index} className={`${stat.backgroundColor} flex flex-col gap-3 p-4`}>
+            <div className="flex flex-row">
+              <div className="w-1/3">
+                <div className={`${stat.iconColor} w-14 h-10 rounded-2xl flex items-center justify-center`}>
+                  <stat.icon />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-medium text-center">{stat.value}</div>
-              <div className="font-medium text-gray-700 text-center">{stat.title}</div>
-            </CardContent>
+              <div className="w-2/3">
+                <div className="text-3xl font-medium text-center">{stat.value}</div>
+              </div>
+            </div>
+            <div className="w-full">
+              <div className="font-medium text-[12px] text-gray-700 text-center">{stat.title}</div>
+            </div>
           </Card>
         ))}
       </div>
 
       {/* Role-based Content Sections */}
-      
-      {/* Connectors - Available to all roles */}
-      <RoleGuard requiredView={VIEWS.LEADS}>
-        <div id="dashboard_main" className="bg-white rounded-2xl p-9 mb-8">
-          <h3 className="flex items-center gap-4">
-            <Link className="w-8 h-8" />
-            <span className="text-2xl font-medium">CONNECTORS</span>
-          </h3>
-          <ConnectorsTabs />
-        </div>
-      </RoleGuard>
 
       {/* API Testing - Admin and Super Admin only */}
       <AdminAndUp>
@@ -222,21 +226,28 @@ export function Dashboard() {
       {/* Agency User Info */}
       <RoleGuard allowedRoles={[3]}>
         <div className="mt-8">
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
-              <h3 className="text-xl font-medium text-blue-800">Agency Dashboard</h3>
-            </CardHeader>
-            <CardContent>
-              <p className="text-blue-700 mb-4">
-                Welcome to your agency dashboard. You can view and manage your leads and data.
-              </p>
-              <div className="space-y-2 text-sm">
-                <p><strong>Data Access:</strong> Limited to your agency data only</p>
-                <p><strong>Available Features:</strong> Lead management, file uploads</p>
-                <p><strong>Need more access?</strong> Contact your administrator</p>
+          <h3 className="text-2xl font-medium">ADD LEADS METHODS</h3>
+          <div className="h-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          { addLeadsMethod.map((method, index) => (
+            <Card key={index} className={`border-[3px] ${method.isActive ? 'border-gray-300 bg-gray-50 cursor-pointer hover:scale-105' : 'cursor-not-allowed hidden'} ${selectedMethod === method.key ? 'border-blue-500 bg-blue-50' : ''} rounded-xl transition-all duration-300`} onClick={() => handleSelectMethod(method.key)}>
+              <CardHeader>
+                <h3 className={`text-xl font-medium ${selectedMethod === method.key ? 'text-blue-800' : 'text-gray-500'}`}>{method.title}</h3>
+              </CardHeader>
+              <CardContent>
+                <p className={`text-sm ${method.isActive ? 'text-gray-600' : 'text-gray-400'} ${selectedMethod === method.key ? 'text-blue-600' : 'text-gray-600'}`}>{method.description}</p>
+              </CardContent>
+            </Card>
+            ))}
+          </div>
+          <div className="h-10"></div>
+          { selectedMethod && (
+            <div id="addLeadsPanel" className="h-4">
+              <div className="flex flex-col gap-4 min-h-[500px]">
+                <LeadsMethod selectedMethod={selectedMethod} setSelectedMethod={setSelectedMethod} />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          ) }
         </div>
       </RoleGuard>
 
@@ -246,11 +257,6 @@ export function Dashboard() {
           <UserDataSync />
         </div>
       </AdminAndUp>
-
-      {/* Auth Debugger - For troubleshooting */}
-      <div className="mt-8">
-        <AuthDebugger />
-      </div>
 
     </div>
   )
