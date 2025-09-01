@@ -69,7 +69,7 @@ export const cookieUtils = {
   // Set auth token (for API calls)
   setAuthToken: (token: string): void => {
     cookieUtils.set('auth_token', token, {
-      expires: 1, // 1 day for access token
+      expires: 1/24, // 1 hour for access token
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax'
     })

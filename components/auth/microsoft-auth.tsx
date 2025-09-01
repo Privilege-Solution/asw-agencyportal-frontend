@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Building, ArrowLeft, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/lib/auth-context"
+import { cookieUtils } from '@/lib/cookie-utils'
 
 // Mock Microsoft auth for development - will be replaced with actual MSAL when credentials are provided
 const useMockMicrosoft = !process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || process.env.NEXT_PUBLIC_AZURE_CLIENT_ID === 'your-client-id-here'
@@ -19,37 +20,33 @@ export function MicrosoftAuth() {
     setIsLoading(true)
     setError(null)
 
-    try {
-      if (useMockMicrosoft) {
-        // Mock authentication for development
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        const mockToken = 'mock-access-token-' + Date.now()
-        login('microsoft', {
-          id: 'mock-user-id',
-          email: 'user@company.com',
-          name: 'John Doe'
-        }, mockToken)
-      } else {
-        // TODO: Implement actual MSAL authentication when credentials are configured
-        // const { PublicClientApplication } = await import('@azure/msal-browser')
-        // const { msalConfig, loginRequest } = await import('@/lib/msal-config')
-        // 
-        // const msalInstance = new PublicClientApplication(msalConfig)
-        // await msalInstance.initialize()
-        // 
-        // const response = await msalInstance.loginPopup(loginRequest)
-        // 
-        // if (response.account) {
-        //   const accessToken = response.accessToken
-        //   login('microsoft', {
-        //     id: response.account.homeAccountId,
-        //     email: response.account.username,
-        //     name: response.account.name || response.account.username
-        //   }, accessToken)
-        // }
+    console.log('🔄 Microsoft authentication started')
 
-        throw new Error('Microsoft SSO credentials not configured. Please configure Azure AD settings.')
+    try {
+      // Implement actual MSAL authentication
+      const { PublicClientApplication } = await import('@azure/msal-browser')
+      const { msalConfig, loginRequest } = await import('@/lib/msal-config')
+      
+      const msalInstance = new PublicClientApplication(msalConfig)
+      await msalInstance.initialize()
+      
+      const response = await msalInstance.loginPopup(loginRequest)
+
+      console.log('🔄 Microsoft authentication response:', response)
+
+      console.log('🔄 Microsoft authentication access token:', response.accessToken)
+      
+      if (response.account) {
+        const accessToken = response.accessToken
+        login('microsoft', {
+          id: response.account.homeAccountId,
+          email: response.account.username,
+          displayName: response.account.name || response.account.username
+        }, accessToken)
+      } else {
+        throw new Error('Authentication failed: No account information received')
       }
+      
     } catch (error) {
       console.error('Microsoft authentication error:', error)
       setError(error instanceof Error ? error.message : 'Authentication failed')

@@ -121,6 +121,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (method: AuthMethod, userData?: Partial<User>, token?: string) => {
     console.log('🔄 User data:', userData)
     
+    const userData2 = fetch('/api/user', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log('🔄 User data2:', data)
+    })
+    
     // Validate userRoleID - must be 1, 2, or 3 (null/undefined not allowed)
     if (!userData?.userRoleID || ![1, 2, 3].includes(userData.userRoleID)) {
       console.error('❌ Invalid or missing userRoleID detected:', userData?.userRoleID, '- Login denied')

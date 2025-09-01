@@ -7,9 +7,8 @@ import { Shield, Mail, Building } from "lucide-react"
 import { useAuth, type AuthMethod } from "@/lib/auth-context"
 import { alert } from "@/hooks/use-alert"
 import Image from 'next/image'
+import { cookieUtils } from '@/lib/cookie-utils'
 
-// Mock Microsoft auth for development - will be replaced with actual MSAL when credentials are provided
-const useMockMicrosoft = !process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || process.env.NEXT_PUBLIC_AZURE_CLIENT_ID === 'your-client-id-here'
 
 export function LoginSelector() {
   const { setAuthMethod, login } = useAuth()
@@ -19,36 +18,6 @@ export function LoginSelector() {
     setIsLoadingMicrosoft(true)
 
     try {
-      if (useMockMicrosoft) {
-        // Mock authentication for development
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        const mockToken = 'mock-access-token-' + Date.now()
-        
-        // First, login with basic info and token
-        login('microsoft', {
-          id: 'mock-user-id',
-          email: 'user@company.com',
-          displayName: 'John Doe'
-        }, mockToken)
-        
-        // Then fetch complete user data from API
-        const response = await fetch('/api/user', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-
-        if (response.ok) {
-          const userData = await response.json()
-          console.log('✅ Complete user data fetched after Microsoft login:', userData)
-          
-          // Update user with complete data
-          login('microsoft', userData.data, mockToken)
-        } else {
-          console.warn('Could not fetch complete user data, using basic info')
-        }
-      } else {
         // Actual MSAL authentication
         const { PublicClientApplication } = await import('@azure/msal-browser')
         const { msalConfig, loginRequest } = await import('@/lib/msal-config')
@@ -61,35 +30,34 @@ export function LoginSelector() {
         if (response.account) {
           // Extract access token from the response
           const accessToken = response.accessToken
+          cookieUtils.setAuthToken(accessToken)
           
-          // First, login with basic info and token
-          login('microsoft', {
-            id: response.account.homeAccountId,
-            email: response.account.username,
-            displayName: response.account.name || response.account.username
-          }, accessToken)
-          
-          // Then fetch complete user data from API
+          // Fetch complete user data from API first
           const userResponse = await fetch('/api/user', {
             method: 'GET',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
             }
           })
 
           if (userResponse.ok) {
             const userData = await userResponse.json()
             console.log('✅ Complete user data fetched after Microsoft login:', userData)
+            console.log('🔍 userData.data structure:', userData.data)
+            console.log('🔍 userData.data.userRoleID:', userData.data?.userRoleID)
             
-            // Update user with complete data
+            // Login with complete data
+            console.log('🔄 Login with complete data:', userData.data)
             login('microsoft', userData.data, accessToken)
           } else {
             console.warn('Could not fetch complete user data, using basic info')
+            const errorText = await userResponse.text()
+            console.error('❌ API Error Response:', errorText)
           }
         } else {
           throw new Error('Authentication successful but no account information received')
         }
-      }
     } catch (error) {
       console.error('Microsoft authentication error:', error)
       let errorMessage = 'Authentication failed'

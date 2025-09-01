@@ -62,11 +62,15 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
       if (response.ok) {
         const userData = await response.json()
         console.log('✅ Complete user data fetched after OTP login:', userData)
+        console.log('🔍 userData.data structure:', userData.data)
+        console.log('🔍 userData.data.userRoleID:', userData.data?.userRoleID)
         
         // Update user with complete data
         login('email', userData.data, otpToken)
       } else {
         console.warn('Could not fetch complete user data, using basic info')
+        const errorText = await response.text()
+        console.error('❌ API Error Response:', errorText)
       }
     } catch (error) {
       console.error('Error fetching user data after OTP login:', error)
