@@ -11,6 +11,8 @@ import { RoleGuard, SuperAdminOnly, AdminAndUp } from "@/components/rbac/RoleGua
 import { PERMISSIONS, VIEWS, ROLE_NAMES, UserRole } from "@/lib/types/roles"
 import { Badge } from "@/components/ui/badge"
 import { UserDataSync } from "@/components/auth/UserDataSync"
+import { Button } from "@/components/ui/button"
+import { AuthDebugger } from "@/components/test/AuthDebugger"
 
 const stats = [
   {
@@ -94,6 +96,13 @@ export function Dashboard() {
     }
   }, [])
 
+  // Debug user data
+  useEffect(() => {
+    console.log('🔍 Dashboard: User data:', user);
+    console.log('🔍 Dashboard: User role ID:', user?.userRoleID);
+    console.log('🔍 Dashboard: User display name:', user?.displayName);
+  }, [user])
+
 
   return (
     <div className="p-6">
@@ -168,6 +177,12 @@ export function Dashboard() {
               >
                 Full Test Page →
               </a>
+              <a 
+                href="/dashboard/auth-test" 
+                className="text-purple-600 hover:text-purple-800 font-medium"
+              >
+                Auth Test →
+              </a>
             </div>
           </div>
           <SimpleApiTest />
@@ -232,6 +247,10 @@ export function Dashboard() {
         </div>
       </AdminAndUp>
 
+      {/* Auth Debugger - For troubleshooting */}
+      <div className="mt-8">
+        <AuthDebugger />
+      </div>
 
     </div>
   )

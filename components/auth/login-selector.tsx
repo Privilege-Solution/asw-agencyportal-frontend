@@ -30,6 +30,7 @@ export function LoginSelector() {
         if (response.account) {
           // Extract access token from the response
           const accessToken = response.accessToken
+          
           cookieUtils.setAuthToken(accessToken)
           
           // Fetch complete user data from API first

@@ -37,147 +37,190 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check for existing authentication on mount and fetch fresh user data
   useEffect(() => {
     const checkAuth = async () => {      
+      console.log('🔍 AuthProvider: Checking authentication...');
+      
       try {
         const savedUser = cookieUtils.getAuthUser()
-        const authToken = cookieUtils.getAuthToken()
+        const authToken = cookieUtils.getAuthToken()        
+        
+        console.log('🔍 AuthProvider: Saved user:', savedUser ? 'exists' : 'null');
+        console.log('🔍 AuthProvider: Auth token:', authToken ? 'exists' : 'null');
         
         if (savedUser && authToken) {
           // Set saved user first for immediate UI
           setUser(savedUser)
+          console.log('🔍 AuthProvider: Set saved user for immediate UI');
           
           // Then fetch fresh user data from API to ensure role is up to date
           try {
             const response = await fetch('/api/user', {
               method: 'GET',
               headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
               }
             })
 
             if (response.ok) {
               const freshUserData = await response.json()
               const userData = freshUserData.data
-              console.log('🔄 Refreshed user data from API:', userData)
-              console.log('📊 Role mapping check:', {
-                apiUserRoleID: userData.userRoleID,
-                apiMappedRole: userData.userRoleName,
-                savedUserRole: savedUser.userRoleName
-              })
+              
+              console.log('🔍 AuthProvider: Fresh user data received:', userData);
+              
+              // Use the user data directly from the data object
+              const actualUserData = userData
               
               // Update with fresh data
               const updatedUser: User = {
-                id: userData.id || userData.employeeId || savedUser.id,
-                email: userData.email || savedUser.email,
-                displayName: userData.displayName || userData.givenName || savedUser.displayName,
-                givenName: userData.givenName || savedUser.givenName,
-                surename: userData.surename || savedUser.surename,
-                userRoleID: userData.userRoleID,
-                userRoleName: userData.userRoleName,
-                departmentID: userData.departmentID,
-                departmentName: userData.departmentName,
-                jobTitle: userData.jobTitle,
-                projectIDs: userData.projectIDs,
-                createBy: userData.createBy,
-                createDate: userData.createDate,
-                updateBy: userData.updateBy,
-                updateDate: userData.updateDate,
-                isActive: userData.isActive
+                id: actualUserData.id || actualUserData.employeeId || savedUser.id,
+                email: actualUserData.email || savedUser.email,
+                displayName: actualUserData.displayName || actualUserData.givenName || savedUser.displayName,
+                givenName: actualUserData.givenName || savedUser.givenName,
+                surename: actualUserData.surename || savedUser.surename,
+                userRoleID: actualUserData.userRoleID,
+                userRoleName: actualUserData.userRoleName,
+                departmentID: actualUserData.departmentID,
+                departmentName: actualUserData.departmentName,
+                jobTitle: actualUserData.jobTitle,
+                projectIDs: actualUserData.projectIDs,
+                createBy: actualUserData.createBy,
+                createDate: actualUserData.createDate,
+                updateBy: actualUserData.updateBy,
+                updateDate: actualUserData.updateDate,
+                isActive: actualUserData.isActive
               }
-
-              console.log('ffetched user data', userData);
+              
+              console.log('🔍 AuthProvider: Updated user object:', updatedUser);
               
               // Validate userRoleID - must be 1, 2, or 3
-              if (![1, 2, 3].includes(userData.userRoleID)) {
-                console.error('❌ Invalid userRoleID detected:', userData.userRoleID, '- Logging out user')
+              if (!actualUserData?.userRoleID || ![1, 2, 3].includes(actualUserData.userRoleID)) {
+                console.error('❌ Invalid or missing userRoleID detected:', actualUserData?.userRoleID, '- Logging out user')
                 logout()
                 return
               }
               
-              console.log('✅ Updated user with fresh data:', {
-                userRoleID: updatedUser.userRoleID,
-                role: updatedUser.userRoleID === 1 ? USER_ROLES.SUPER_ADMIN : updatedUser.userRoleID === 2 ? USER_ROLES.ADMIN : USER_ROLES.AGENCY,
-                userRoleName: updatedUser.userRoleName
-              })
-              
               setUser(updatedUser)
               cookieUtils.setAuthUser(updatedUser)
+              console.log('🔍 AuthProvider: Successfully updated user data');
+            } else {
+              console.error('❌ AuthProvider: API response not ok:', response.status, response.statusText);
+              const errorText = await response.text();
+              console.error('❌ AuthProvider: Error details:', errorText);
             }
           } catch (apiError) {
-            console.warn('Could not refresh user data from API:', apiError)
+            console.warn('⚠️ AuthProvider: Could not refresh user data from API:', apiError)
+            console.log('🔍 AuthProvider: Keeping saved user data as fallback');
             // Keep using saved user data if API fails
           }
         }
       } catch (error) {
-        console.error('Error checking authentication:', error)
+        console.error('❌ AuthProvider: Error checking authentication:', error)
         cookieUtils.removeAuthUser()
       } finally {
         setIsLoading(false)
+        console.log('🔍 AuthProvider: Authentication check completed');
       }
     }    
 
     checkAuth()
   }, [])
 
-  const login = (method: AuthMethod, userData?: Partial<User>, token?: string) => {
-    console.log('🔄 User data:', userData)
-    
-    const userData2 = fetch('/api/user', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+  const login = async (method: AuthMethod, userData?: Partial<User>, token?: string) => {
+    try {
+      // If we have a token, fetch complete user data from API
+      if (token) {
+        const response = await fetch('/api/user', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          const apiResponse = await response.json()
+          const userDataFromApi = apiResponse.data
+          
+          // Use the user data directly from the data object
+          const actualUserData = userDataFromApi
+          
+          // Validate userRoleID - must be 1, 2, or 3
+          if (!actualUserData?.userRoleID || ![1, 2, 3].includes(actualUserData.userRoleID)) {
+            console.error('❌ Invalid or missing userRoleID detected:', actualUserData?.userRoleID, '- Login denied')
+            return // Don't login, don't logout (user was never logged in)
+          }
+          
+          // Map userRoleID to role
+          const role: UserRole = actualUserData.userRoleID === 1 ? USER_ROLES.SUPER_ADMIN : 
+                                actualUserData.userRoleID === 2 ? USER_ROLES.ADMIN : 
+                                USER_ROLES.AGENCY
+
+          const newUser: User = {
+            id: actualUserData.id || actualUserData.employeeId || 'user-' + Date.now(),
+            email: actualUserData.email || userData?.email || '',
+            displayName: actualUserData.displayName || actualUserData.givenName || userData?.displayName || 'User',
+            givenName: actualUserData.givenName || userData?.givenName || '',
+            surename: actualUserData.surename || userData?.surename || '',
+            userRoleID: actualUserData.userRoleID,
+            userRoleName: actualUserData.userRoleName || '',
+            departmentID: actualUserData.departmentID || 0,
+            departmentName: actualUserData.departmentName || '',
+            jobTitle: actualUserData.jobTitle || '',
+            projectIDs: actualUserData.projectIDs || [],
+            createBy: actualUserData.createBy || '',
+            createDate: actualUserData.createDate || '',
+            updateBy: actualUserData.updateBy || '',
+            updateDate: actualUserData.updateDate || '',
+            isActive: actualUserData.isActive || false
+          }
+          
+          setUser(newUser)
+          cookieUtils.setAuthUser(newUser)
+          cookieUtils.setAuthToken(token)
+          setCurrentAuthMethod(null)
+          return
+        } else {
+          console.error('❌ API call failed during login:', response.status, response.statusText)
+        }
       }
-    })
-    .then(res => res.json())
-    .then(data => {
-      console.log('🔄 User data2:', data)
-    })
-    
-    // Validate userRoleID - must be 1, 2, or 3 (null/undefined not allowed)
-    if (!userData?.userRoleID || ![1, 2, 3].includes(userData.userRoleID)) {
-      console.error('❌ Invalid or missing userRoleID detected:', userData?.userRoleID, '- Login denied')
-      return // Don't login, don't logout (user was never logged in)
+      
+      // Fallback: Use basic user data if API call fails or no token
+      if (!userData?.userRoleID || ![1, 2, 3].includes(userData.userRoleID)) {
+        console.error('❌ Invalid or missing userRoleID in fallback data:', userData?.userRoleID, '- Login denied')
+        return
+      }
+      
+      const newUser: User = {
+        id: userData?.id || 'user-' + Date.now(),
+        email: userData?.email || '',
+        displayName: userData?.displayName || userData?.givenName || userData?.surename || 'User',
+        givenName: userData?.givenName || '',
+        surename: userData?.surename || '',
+        userRoleID: userData?.userRoleID || 0,
+        userRoleName: userData?.userRoleName || '',
+        departmentID: userData?.departmentID || 0,
+        departmentName: userData?.departmentName || '',
+        jobTitle: userData?.jobTitle || '',
+        projectIDs: userData?.projectIDs || [],
+        createBy: userData?.createBy || '',
+        createDate: userData?.createDate || '',
+        updateBy: userData?.updateBy || '',
+        updateDate: userData?.updateDate || '',
+        isActive: userData?.isActive || false
+      }
+      
+      setUser(newUser)
+      cookieUtils.setAuthUser(newUser)
+      
+      // Store auth token if provided
+      if (token) {
+        cookieUtils.setAuthToken(token)
+      }
+      
+      setCurrentAuthMethod(null)
+    } catch (error) {
+      console.error('❌ Error during login:', error)
     }
-    
-    // Map userRoleID to role
-    const role: UserRole = userData.userRoleID === 1 ? USER_ROLES.SUPER_ADMIN : 
-                          userData.userRoleID === 2 ? USER_ROLES.ADMIN : 
-                          USER_ROLES.AGENCY
-
-    console.log('🔄 Login mapping:', {
-      userRoleID: userData.userRoleID,
-      finalRole: role,
-      mapping: `userRoleID ${userData.userRoleID} -> role ${role}`
-    })
-
-    const newUser: User = {
-      id: userData?.id || 'user-' + Date.now(),
-      email: userData?.email || '',
-      displayName: userData?.displayName || userData?.givenName || userData?.surename || 'User',
-      givenName: userData?.givenName || '',
-      surename: userData?.surename || '',
-      userRoleID: userData?.userRoleID || 0,
-      userRoleName: userData?.userRoleName || '',
-      departmentID: userData?.departmentID || 0,
-      departmentName: userData?.departmentName || '',
-      jobTitle: userData?.jobTitle || '',
-      projectIDs: userData?.projectIDs || [],
-      createBy: userData?.createBy || '',
-      createDate: userData?.createDate || '',
-      updateBy: userData?.updateBy || '',
-      updateDate: userData?.updateDate || '',
-      isActive: userData?.isActive || false
-    }
-    
-    setUser(newUser)
-    cookieUtils.setAuthUser(newUser)
-    
-    // Store auth token if provided
-    if (token) {
-      cookieUtils.setAuthToken(token)
-    }
-    
-    setCurrentAuthMethod(null) // Reset auth method selection
   }
 
   const logout = () => {

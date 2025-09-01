@@ -8,14 +8,17 @@ import { useEffect } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function DashboardPage() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
+    console.log('🔍 DashboardPage: Auth state:', { isAuthenticated, isLoading, user: user ? 'exists' : 'null' });
+    
     if (!isLoading && !isAuthenticated) {
+      console.log('🔍 DashboardPage: Not authenticated, redirecting to login');
       router.push('/auth/login')
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, router, user])
 
   if (isLoading) {
     return (
