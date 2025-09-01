@@ -26,3 +26,22 @@ export interface Lead {
 export interface Leads {
   Data: Lead[]
 }
+
+export interface User {
+  id: string
+  displayName: string
+  givenName: string
+  surename: string
+  email: string
+  userRoleID: number | null
+  userRoleName: string
+  departmentID: number
+  departmentName: string
+  jobTitle: string
+  projectIDs: number[]
+  createBy: string
+  createDate: string
+  updateBy: string
+  updateDate: string
+  isActive: boolean
+}

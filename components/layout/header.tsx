@@ -33,21 +33,12 @@ export function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* Theme Toggle */}
-          <Button variant="ghost" size="icon" onClick={() => setIsDark(!isDark)}>
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-
-          {/* Notifications */}
-          <Button variant="ghost" size="icon">
-            <Bell className="h-4 w-4" />
-          </Button>
 
           {/* User Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2">
-                <span className="hidden md:block">{user?.name || "User"}</span>
+                <span className="hidden md:block">{user?.displayName || "User"}</span>
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>

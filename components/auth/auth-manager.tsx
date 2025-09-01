@@ -17,8 +17,10 @@ export function AuthManager() {
   // Show appropriate authentication form based on selected method
   switch (currentAuthMethod) {
     case 'microsoft':
+      console.log('🔄 Microsoft authentication selected')
       return <MicrosoftAuth />
     case 'email':
+      console.log('🔄 Email authentication selected')
       return <EmailOtpForm />
     default:
       return <LoginSelector />

@@ -1,20 +1,24 @@
 "use client"
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
+import { Dashboard } from "@/components/dashboard/dashboard"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function DashboardPage() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
+    console.log('🔍 DashboardPage: Auth state:', { isAuthenticated, isLoading, user: user ? 'exists' : 'null' });
+    
     if (!isLoading && !isAuthenticated) {
+      console.log('🔍 DashboardPage: Not authenticated, redirecting to login');
       router.push('/auth/login')
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, router, user])
 
   if (isLoading) {
     return (
@@ -34,5 +38,9 @@ export default function DashboardPage() {
     return null // Will redirect via useEffect
   }
 
-  return <DashboardLayout />
+  return (
+    <DashboardLayout>
+      <Dashboard />
+    </DashboardLayout>
+  )
 } 
