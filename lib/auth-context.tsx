@@ -13,7 +13,7 @@ export interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (method: AuthMethod, userData?: Partial<User>, token?: string) => void
+  login: (method: AuthMethod, userData?: Partial<User>, token?: string) => Promise<void>
   logout: () => void
   setAuthMethod: (method: AuthMethod | null) => void
   currentAuthMethod: AuthMethod | null
@@ -125,102 +125,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
   }, [])
 
-  const login = async (method: AuthMethod, userData?: Partial<User>, token?: string) => {
-    try {
-      // If we have a token, fetch complete user data from API
-      if (token) {
-        const response = await fetch('/api/user', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        
-        if (response.ok) {
-          const apiResponse = await response.json()
-          const userDataFromApi = apiResponse.data
-          
-          // Use the user data directly from the data object
-          const actualUserData = userDataFromApi
-          
-          // Validate userRoleID - must be 1, 2, or 3
-          if (!actualUserData?.userRoleID || ![1, 2, 3].includes(actualUserData.userRoleID)) {
-            console.error('❌ Invalid or missing userRoleID detected:', actualUserData?.userRoleID, '- Login denied')
-            return // Don't login, don't logout (user was never logged in)
-          }
-          
-          // Map userRoleID to role
-          const role: UserRole = actualUserData.userRoleID === 1 ? USER_ROLES.SUPER_ADMIN : 
-                                actualUserData.userRoleID === 2 ? USER_ROLES.ADMIN : 
-                                USER_ROLES.AGENCY
-
-          const newUser: User = {
-            id: actualUserData.id || actualUserData.employeeId || 'user-' + Date.now(),
-            email: actualUserData.email || userData?.email || '',
-            displayName: actualUserData.displayName || actualUserData.givenName || userData?.displayName || 'User',
-            givenName: actualUserData.givenName || userData?.givenName || '',
-            surename: actualUserData.surename || userData?.surename || '',
-            userRoleID: actualUserData.userRoleID,
-            userRoleName: actualUserData.userRoleName || '',
-            departmentID: actualUserData.departmentID || 0,
-            departmentName: actualUserData.departmentName || '',
-            jobTitle: actualUserData.jobTitle || '',
-            projectIDs: actualUserData.projectIDs || [],
-            createBy: actualUserData.createBy || '',
-            createDate: actualUserData.createDate || '',
-            updateBy: actualUserData.updateBy || '',
-            updateDate: actualUserData.updateDate || '',
-            isActive: actualUserData.isActive || false
-          }
-          
-          setUser(newUser)
-          cookieUtils.setAuthUser(newUser)
-          cookieUtils.setAuthToken(token)
-          setCurrentAuthMethod(null)
-          return
-        } else {
-          console.error('❌ API call failed during login:', response.status, response.statusText)
-        }
-      }
-      
-      // Fallback: Use basic user data if API call fails or no token
-      if (!userData?.userRoleID || ![1, 2, 3].includes(userData.userRoleID)) {
-        console.error('❌ Invalid or missing userRoleID in fallback data:', userData?.userRoleID, '- Login denied')
-        return
-      }
-      
-      const newUser: User = {
-        id: userData?.id || 'user-' + Date.now(),
-        email: userData?.email || '',
-        displayName: userData?.displayName || userData?.givenName || userData?.surename || 'User',
-        givenName: userData?.givenName || '',
-        surename: userData?.surename || '',
-        userRoleID: userData?.userRoleID || 0,
-        userRoleName: userData?.userRoleName || '',
-        departmentID: userData?.departmentID || 0,
-        departmentName: userData?.departmentName || '',
-        jobTitle: userData?.jobTitle || '',
-        projectIDs: userData?.projectIDs || [],
-        createBy: userData?.createBy || '',
-        createDate: userData?.createDate || '',
-        updateBy: userData?.updateBy || '',
-        updateDate: userData?.updateDate || '',
-        isActive: userData?.isActive || false
-      }
-      
-      setUser(newUser)
-      cookieUtils.setAuthUser(newUser)
-      
-      // Store auth token if provided
-      if (token) {
-        cookieUtils.setAuthToken(token)
-      }
-      
-      setCurrentAuthMethod(null)
-    } catch (error) {
-      console.error('❌ Error during login:', error)
+  const login = (method: AuthMethod, userData?: Partial<User>, token?: string) => {
+    console.log('🔄 User data:', userData)
+    
+    // Validate userRoleID - must be 1, 2, or 3 (null/undefined not allowed)
+    if (!userData?.userRoleID || ![1, 2, 3].includes(userData.userRoleID)) {
+      console.error('❌ Invalid or missing userRoleID detected:', userData?.userRoleID, '- Login denied')
+      return // Don't login, don't logout (user was never logged in)
     }
+    
+    // Map userRoleID to role
+    const role: UserRole = userData.userRoleID === 1 ? USER_ROLES.SUPER_ADMIN : 
+                          userData.userRoleID === 2 ? USER_ROLES.ADMIN : 
+                          USER_ROLES.AGENCY
+
+    console.log('🔄 Login mapping:', {
+      userRoleID: userData.userRoleID,
+      finalRole: role,
+      mapping: `userRoleID ${userData.userRoleID} -> role ${role}`
+    })
+
+    const newUser: User = {
+      id: userData?.id || 'user-' + Date.now(),
+      email: userData?.email || '',
+      displayName: userData?.displayName || userData?.givenName || userData?.surename || 'User',
+      givenName: userData?.givenName || '',
+      surename: userData?.surename || '',
+      userRoleID: userData?.userRoleID || 0,
+      userRoleName: userData?.userRoleName || '',
+      departmentID: userData?.departmentID || 0,
+      departmentName: userData?.departmentName || '',
+      jobTitle: userData?.jobTitle || '',
+      projectIDs: userData?.projectIDs || [],
+      createBy: userData?.createBy || '',
+      createDate: userData?.createDate || '',
+      updateBy: userData?.updateBy || '',
+      updateDate: userData?.updateDate || '',
+      isActive: userData?.isActive || false
+    }
+    
+    setUser(newUser)
+    cookieUtils.setAuthUser(newUser)
+    
+    // Store auth token if provided
+    if (token) {
+      cookieUtils.setAuthToken(token)
+    }
+    
+    setCurrentAuthMethod(null) // Reset auth method selection
   }
 
   const logout = () => {

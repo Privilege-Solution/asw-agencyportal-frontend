@@ -6,6 +6,8 @@ export async function GET(request: NextRequest) {
     // Get auth token from cookies on the server side
     const cookieStore = await cookies()
     const authToken = cookieStore.get('auth_token')?.value
+    console.log(authToken);
+    
 
     // Also check Authorization header as fallback
     const authHeader = request.headers.get('authorization')
