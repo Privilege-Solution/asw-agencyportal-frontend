@@ -24,34 +24,10 @@ const menuItems = [
     view: VIEWS.LEADS
   },
   { 
-    icon: BarChart3, 
-    label: "Analytics", 
-    href: "/dashboard/analytics",
-    view: VIEWS.ANALYTICS
-  },
-  { 
-    icon: FileText, 
-    label: "รายงาน", 
-    href: "/dashboard/reports",
-    view: VIEWS.REPORTS
-  },
-  { 
-    icon: Upload, 
-    label: "File Upload", 
-    href: "/dashboard/file-upload",
-    view: VIEWS.FILE_UPLOAD
-  },
-  { 
     icon: Users, 
     label: "User Management", 
     href: "/dashboard/users",
     view: VIEWS.USER_MANAGEMENT
-  },
-  { 
-    icon: TestTube, 
-    label: "API Test", 
-    href: "/dashboard/api-test-client",
-    view: VIEWS.API_TEST
   },
   { 
     icon: Settings, 
