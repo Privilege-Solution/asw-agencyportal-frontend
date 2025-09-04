@@ -73,6 +73,10 @@ export const cookieUtils = {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax'
     })
+    // for dev
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔑 Token:', token)
+    }
   },
 
   // Get auth token
