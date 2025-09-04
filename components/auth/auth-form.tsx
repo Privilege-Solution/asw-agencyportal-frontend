@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Shield, ArrowLeft } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { requestOtp } from "@/hooks/use-otp"
 
 interface EmailOtpFormProps {
   // No props needed as we use context
@@ -20,16 +21,31 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
   const [email, setEmail] = useState("")
   const [otp, setOtp] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [requestOtpError, setRequestOtpError] = useState("")
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email) return
-
+    
     setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-    setStep("otp")
+    
+    try {
+      const { success, error } = await requestOtp(email)
+
+      if (success) {
+        // Success - move to OTP step
+        setStep("otp")
+      } else {
+        // Error response
+        setRequestOtpError(error)
+        console.error('Failed to send OTP:', error)
+      }
+    } catch (error) {
+      // Network or other error
+      console.error('Error sending OTP request:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
@@ -63,9 +79,9 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
           <Shield className="h-6 w-6 text-blue-600" />
         </div>
-        <CardTitle className="text-2xl font-bold">Email OTP Login</CardTitle>
+        <CardTitle className="text-2xl font-medium">รับรหัส OTP ผ่านอีเมล</CardTitle>
         <CardDescription>
-          {step === "email" ? "Enter your email to receive OTP" : "Enter the OTP sent to your email"}
+          {step === "email" ? "กรุณากรอกอีเมลที่ลงทะเบียนไว้" : "กรุณากรอกรหัส OTP ที่ถูกส่งไปยังอีเมล"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -78,7 +94,7 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder=""
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -86,7 +102,12 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            {requestOtpError && (
+              <div className="text-red-600 text-sm mt-2">
+                {requestOtpError}
+              </div>
+            )}
+            <Button type="submit" className="w-full bg-blue-800 hover:bg-blue-900" disabled={isLoading}>
               {isLoading ? "Sending OTP..." : "Send OTP"}
             </Button>
           </form>
