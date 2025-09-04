@@ -44,4 +44,30 @@ export interface User {
   updateBy: string
   updateDate: string
   isActive: boolean
+  userType?: 'agency' | 'agent' // For agency role users, distinguishes between agency owner and agent
+}
+
+export interface Agency {
+  id?: string
+  name: string
+  description: string
+  email: string
+  tel: string
+  agencyTypeID: number
+  isActive: boolean
+  firstName: string
+  lastName: string
+  projectIDs: number[]
+}
+
+export interface Agent {
+  agencyID: string
+  agentID: string
+  isActive: boolean
+  agent: {
+    firstName: string
+    lastName: string
+    email: string
+    tel: string
+  }
 }

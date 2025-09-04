@@ -10,15 +10,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { LineLoader } from "@/components/ui/line-loader"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { useNavigationLoading } from "@/hooks/use-navigation-loading"
 
 export function Header() {
   const router = useRouter()
   const { logout, user } = useAuth()
   const [isDark, setIsDark] = useState(false)
   const [language, setLanguage] = useState("EN")
+  const isNavigationLoading = useNavigationLoading()
 
   const handleLogout = () => {
     logout()
@@ -26,7 +29,7 @@ export function Header() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-white border-b border-gray-200 px-6 py-4 relative">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
@@ -54,6 +57,9 @@ export function Header() {
           </DropdownMenu>
         </div>
       </div>
+      
+      {/* Line Loader */}
+      <LineLoader isLoading={isNavigationLoading} className="bottom-0" />
     </header>
   )
 }
