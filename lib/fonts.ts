@@ -1,12 +1,11 @@
 import localFont from 'next/font/local'
 
-// Example: Configure your custom font
-// Replace with your actual font files
+// DBHeavent Font Configuration
 export const dbHeaventFont = localFont({
   src: [
     {
       path: '../public/fonts/DBHeavent-Thin.woff2',
-      weight: '200',
+      weight: '100',
       style: 'normal',
     },
     {
@@ -31,10 +30,11 @@ export const dbHeaventFont = localFont({
     },
     {
       path: '../public/fonts/DBHeavent-Black.woff2',
-      weight: '700',
+      weight: '900',
       style: 'normal',
     },
   ],
-  variable: '--font-db-heavent',
+  variable: '--font-dbheavent',
   display: 'swap',
+  fallback: ['system-ui', 'arial'],
 })

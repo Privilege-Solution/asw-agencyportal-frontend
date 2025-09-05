@@ -20,7 +20,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={`${dbHeaventFont.variable} font-dbHeavent`}>
+      <body className={`${dbHeaventFont.variable} font-dbheavent`}>
         <AuthProvider>
           {children}
           <AlertProvider />

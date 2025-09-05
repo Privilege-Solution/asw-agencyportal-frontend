@@ -50,6 +50,7 @@ export interface User {
   agencyType?: string
   agencyTypeID?: number
   refCode?: string
+  userType?: 'agency' | 'agent' // For agency role users, distinguishes between agency owner and agent
 }
 
 export interface Agency {
