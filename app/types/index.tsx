@@ -44,4 +44,39 @@ export interface User {
   updateBy: string
   updateDate: string
   isActive: boolean
+  // Agency-specific fields (optional for agency users)
+  agencyID?: string | number
+  agencyName?: string
+  agencyType?: string
+  agencyTypeID?: number
+  refCode?: string
+}
+
+export interface Agency {
+  id: string
+  refCode: string
+  name: string
+  description: string
+  email: string
+  tel: string
+  agencyTypeID: number
+  createBy: string
+  createDate: string
+  updateBy: string
+  updateDate: string
+  isActive: boolean
+  firstName: string
+  lastName: string
+  agencyType: {
+    id: number
+    name: string
+    description: string
+    createBy: string | null
+    createDate: string
+    updateBy: string | null
+    updateDate: string
+    isActive: boolean
+  }
+  projectIDs: number[]
+  members?: any[]
 }

@@ -87,7 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 createDate: actualUserData.createDate,
                 updateBy: actualUserData.updateBy,
                 updateDate: actualUserData.updateDate,
-                isActive: actualUserData.isActive
+                isActive: actualUserData.isActive,
+                // Preserve agency-specific fields if they exist
+                agencyID: actualUserData.agencyID || savedUser.agencyID,
+                agencyName: actualUserData.agencyName || savedUser.agencyName,
+                agencyType: actualUserData.agencyType || savedUser.agencyType,
+                agencyTypeID: actualUserData.agencyTypeID || savedUser.agencyTypeID,
+                refCode: actualUserData.refCode || savedUser.refCode
               }
               
               console.log('🔍 AuthProvider: Updated user object:', updatedUser);
@@ -125,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
   }, [])
 
-  const login = (method: AuthMethod, userData?: Partial<User>, token?: string) => {
+  const login = async (method: AuthMethod, userData?: Partial<User>, token?: string) => {
     console.log('🔄 User data:', userData)
     
     // Validate userRoleID - must be 1, 2, or 3 (null/undefined not allowed)
@@ -161,7 +167,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       createDate: userData?.createDate || '',
       updateBy: userData?.updateBy || '',
       updateDate: userData?.updateDate || '',
-      isActive: userData?.isActive || false
+      isActive: userData?.isActive || false,
+      // Agency-specific fields (if provided)
+      agencyID: userData?.agencyID,
+      agencyName: userData?.agencyName,
+      agencyType: userData?.agencyType,
+      agencyTypeID: userData?.agencyTypeID,
+      refCode: userData?.refCode
     }
     
     setUser(newUser)
