@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Plus, Users, Building2, UserCheck, AlertCircle, Search, Edit, Trash2 } from 'lucide-react'
+import { Plus, Users, Building2, UserCheck, AlertCircle, Search, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { cookieUtils } from '@/lib/cookie-utils'
 import { Agency, Agent, User } from '@/app/types'
@@ -38,6 +38,14 @@ function UserManagement() {
   const [isAgencyDialogOpen, setIsAgencyDialogOpen] = useState(false)
   const [isAgentDialogOpen, setIsAgentDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<UserWithType | null>(null)
+  
+  // Pagination and search states for agencies
+  const [agencySearchStr, setAgencySearchStr] = useState('')
+  const [agencyTypeFilter, setAgencyTypeFilter] = useState<number>(0)
+  const [projectFilter, setProjectFilter] = useState<number>(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [perPage] = useState(10)
+  const [totalAgencies, setTotalAgencies] = useState(0)
   
   // Form states
   const [newAgency, setNewAgency] = useState({
@@ -99,38 +107,77 @@ function UserManagement() {
     }
   }
 
-  const loadAgencies = async () => {
+  const loadAgencies = async (
+    searchStr: string = agencySearchStr,
+    agencyTypeID: number = agencyTypeFilter,
+    projectID: number = projectFilter,
+    page: number = currentPage
+  ) => {
     try {
       const token = cookieUtils.getAuthToken()
       if (!token) {
         throw new Error('No auth token found')
       }
 
+      const offset = (page - 1) * perPage
+
+      const requestBody = {
+        perPage,
+        page,
+        offset,
+        searchStr,
+        agencyTypeID,
+        projectID
+      }
+
       const response = await fetch('/api/agency/list', {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(requestBody)
       })
 
       const result = await response.json()
       
+      console.log('API Response:', result) // Debug log
+      
       if (result.success && result.data) {
+        // Ensure result.data is an array
+        const agenciesData = Array.isArray(result.data) ? result.data : []
+        
+        if (agenciesData.length === 0) {
+          console.log('No agencies data received or data is empty')
+        }
+        
         // Map the API response to our AgencyWithUIFlags interface and mark user-created agencies
-        const agenciesWithFlags: AgencyWithUIFlags[] = result.data.map((agency: Agency) => ({
+        const agenciesWithFlags: AgencyWithUIFlags[] = agenciesData.map((agency: Agency) => ({
           ...agency,
           isCreatedByCurrentUser: agency.createBy === user?.id
         }))
         
         setAgencies(agenciesWithFlags)
+        
+        // Update pagination info
+        if (result.pagination) {
+          setTotalAgencies(result.pagination.total)
+        } else if (result.total !== undefined) {
+          // Fallback if pagination info is directly in result
+          setTotalAgencies(result.total)
+        } else {
+          // Fallback to array length
+          setTotalAgencies(agenciesData.length)
+        }
       } else {
-        throw new Error(result.error || 'Failed to load agencies')
+        console.error('API Response Error:', result)
+        throw new Error(result.error || result.message || 'Failed to load agencies')
       }
     } catch (error) {
       console.error('Error loading agencies:', error)
       // Fallback to empty array
       setAgencies([])
+      setTotalAgencies(0)
       throw error
     }
   }
@@ -286,6 +333,24 @@ function UserManagement() {
     }
   }
 
+  // Search and filter handlers
+  const handleAgencySearch = async () => {
+    setCurrentPage(1) // Reset to first page when searching
+    await loadAgencies(agencySearchStr, agencyTypeFilter, projectFilter, 1)
+  }
+
+  const handlePageChange = async (newPage: number) => {
+    setCurrentPage(newPage)
+    await loadAgencies(agencySearchStr, agencyTypeFilter, projectFilter, newPage)
+  }
+
+  const handleFilterChange = async (agencyTypeID: number, projectID: number) => {
+    setAgencyTypeFilter(agencyTypeID)
+    setProjectFilter(projectID)
+    setCurrentPage(1) // Reset to first page when filtering
+    await loadAgencies(agencySearchStr, agencyTypeID, projectID, 1)
+  }
+
   const handleCreateAgent = async () => {
     try {
       const token = cookieUtils.getAuthToken()
@@ -417,20 +482,75 @@ function UserManagement() {
           <CardTitle className="text-lg">Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between gap-4">
-            {/* Search Box */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search users by name, email, or role..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          <div className="space-y-4">
+            {/* Agency Search and Filters - Show only for users who can view all agencies */}
+            {canViewAllAgencies && (
+              <div className="flex items-center gap-4">
+                {/* Agency Search Box */}
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search agencies..."
+                    value={agencySearchStr}
+                    onChange={(e) => setAgencySearchStr(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAgencySearch()}
+                    className="pl-10"
+                  />
+                </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2">
+                {/* Agency Type Filter */}
+                <Select
+                  value={agencyTypeFilter.toString()}
+                  onValueChange={(value) => handleFilterChange(parseInt(value), projectFilter)}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Agency Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Types</SelectItem>
+                    <SelectItem value="1">Agency</SelectItem>
+                    <SelectItem value="2">Agent</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Project Filter */}
+                <Select
+                  value={projectFilter.toString()}
+                  onValueChange={(value) => handleFilterChange(agencyTypeFilter, parseInt(value))}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Projects</SelectItem>
+                    <SelectItem value="1">Project 1</SelectItem>
+                    <SelectItem value="2">Project 2</SelectItem>
+                    <SelectItem value="3">Project 3</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Search Button */}
+                <Button onClick={handleAgencySearch} variant="outline">
+                  <Search className="h-4 w-4 mr-2" />
+                  Search
+                </Button>
+              </div>
+            )}
+
+            {/* User Search Box - For general user search */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search users by name, email, or role..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
               {/* Agency Creation - for SuperAdmin and Admin */}
               <RoleGuard allowedRoles={[USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN]}>
                 <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -480,6 +600,7 @@ function UserManagement() {
                   </DialogContent>
                 </Dialog>
               </RoleGuard>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -488,7 +609,14 @@ function UserManagement() {
       {/* Content based on user role */}
       {canViewAllAgencies && (
         <>
-          <AgencyListView agencies={agencies} currentUserId={user?.id} />
+          <AgencyListView 
+            agencies={agencies} 
+            currentUserId={user?.id}
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalAgencies / perPage)}
+            totalAgencies={totalAgencies}
+            onPageChange={handlePageChange}
+          />
           
           {/* Users Table */}
           <Card>
@@ -541,8 +669,8 @@ function UserManagement() {
                       <TableCell>
                         <div className="flex gap-2">
                           {/* Edit permissions based on user role */}
-                          {(((isAdmin && isAdmin()) || (isSuperAdmin && isSuperAdmin())) && user.userType === 'agency') || 
-                           ((isAgency && isAgency()) && user.userType === 'agent') && (
+                          {((((isAdmin && isAdmin()) || (isSuperAdmin && isSuperAdmin())) && user.userType === 'agency') || 
+                           ((isAgency && isAgency()) && user.userType === 'agent')) && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -553,8 +681,8 @@ function UserManagement() {
                           )}
                           
                           {/* Delete permissions */}
-                          {(((isAdmin && isAdmin()) || (isSuperAdmin && isSuperAdmin())) && user.userType === 'agency') || 
-                           ((isAgency && isAgency()) && user.userType === 'agent') && (
+                          {((((isAdmin && isAdmin()) || (isSuperAdmin && isSuperAdmin())) && user.userType === 'agency') || 
+                           ((isAgency && isAgency()) && user.userType === 'agent')) && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -723,16 +851,27 @@ function CreateAgentForm({ newAgent, setNewAgent, onSubmit }: {
 }
 
 // Agency List View Component
-function AgencyListView({ agencies, currentUserId }: {
+function AgencyListView({ 
+  agencies, 
+  currentUserId, 
+  currentPage, 
+  totalPages, 
+  totalAgencies, 
+  onPageChange 
+}: {
   agencies: AgencyWithUIFlags[]
   currentUserId?: string
+  currentPage: number
+  totalPages: number
+  totalAgencies: number
+  onPageChange: (page: number) => void
 }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building2 className="h-5 w-5" />
-          Agencies
+          Agencies ({totalAgencies})
         </CardTitle>
         <CardDescription>
           All agencies in the system
@@ -800,8 +939,64 @@ function AgencyListView({ agencies, currentUserId }: {
                 </TableCell>
               </TableRow>
             ))}
+            {agencies.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  <div className="text-muted-foreground">
+                    No agencies found.
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages} ({totalAgencies} total agencies)
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i
+                if (pageNum > totalPages) return null
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === currentPage ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => onPageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              })}
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
