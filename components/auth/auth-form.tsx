@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Mail, Shield, ArrowLeft } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { requestOtp, submitOtp } from "@/hooks/use-otp"
+import { completeAgencyAuth } from "@/lib/agency-auth"
 
 interface EmailOtpFormProps {
   // No props needed as we use context
@@ -59,29 +60,57 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
 
     console.log('OTP submitted:', otp)
 
     try {
+      // Step 1: Submit OTP and get token
       const { success, error, data } = await submitOtp(email, otp)
-      if (success) {
-        // Success - move to OTP step
-        console.log('Success - OTP submitted data:', data)
-        login('email', {
-          email: email,
-          displayName: email.split('@')[0]
-        }, data.token)
-      } else {
-        // Error response
+      
+      if (!success) {
         setSubmitOtpError(error)
         console.error('Failed to submit OTP:', error)
+        return
+      }
+
+      console.log('Success - OTP submitted data:', data)
+      console.log('Token extraction - data.token:', data.token)
+
+      // Handle the response structure: { data: "token", message: "", status: 200, success: true }
+      const token = data.token
+
+      if (!token) {
+        setSubmitOtpError('No token received from OTP verification')
+        console.error('No token in OTP response. Full response:', data)
+        console.error('Expected token at data.token, but got:', typeof token, token)
+        return
+      }
+
+      console.log('Extracted token:', token)
+
+      // Steps 2-4: Complete agency authentication flow
+      console.log('Starting agency authentication flow with token...')
+      const agencyAuthResult = await completeAgencyAuth(token)
+
+      if (agencyAuthResult.success) {
+        console.log('Agency authentication successful:', agencyAuthResult.userData)
+        
+        // Login with agency user data
+        await login('email', agencyAuthResult.userData, token)
+        
+        // Clear any errors
+        setSubmitOtpError('')
+      } else {
+        console.error('Agency authentication failed:', agencyAuthResult.error)
+        setSubmitOtpError(agencyAuthResult.error || 'Failed to authenticate agency user')
       }
     } catch (error) {
-      console.error('Error submitting OTP:', error)
+      console.error('Error in OTP submission flow:', error)
+      setSubmitOtpError('An unexpected error occurred during authentication')
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsLoading(true)
-    
   }
 
   return (

@@ -15,7 +15,14 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
     
     if (response.ok) {
-      return NextResponse.json(data)
+      // Handle response structure: { data: "token", message: "", status: 200, success: true }
+      return NextResponse.json({
+        success: data.success || true,
+        token: data.data, // Token is directly in data field
+        message: data.message || 'OTP verified successfully',
+        status: data.status || 200,
+        //originalResponse: data
+      })
     } else {
       return NextResponse.json(data, { status: response.status })
     }
