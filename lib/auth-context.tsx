@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { cookieUtils } from './cookie-utils'
 import { UserRole, USER_ROLES } from './types/roles'
-import { hasPermission, canAccessView, getUserPermissions, getUserViews } from './rbac'
+import { hasPermission, canAccessView, getUserPermissions, getUserViews, hasPermissionWithAgencyType, canAccessViewWithAgencyType } from './rbac'
 import type { Permission, View } from './types/roles'
 import { User } from '@/app/types'
 
@@ -51,8 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(savedUser)
           console.log('🔍 AuthProvider: Set saved user for immediate UI');
           
-          // Then fetch fresh user data from API to ensure role is up to date
-          try {
+          // Check if this is an OTP user (agency user with agencyID)
+          const isOTPUser = savedUser.agencyID || savedUser.agencyType
+          console.log('🔍 AuthProvider: Is OTP user?', isOTPUser ? 'Yes' : 'No');
+          
+          // Only fetch fresh user data from GetUser API for Microsoft users
+          // OTP users already have complete data from agency authentication flow
+          if (!isOTPUser) {
+            console.log('🔍 AuthProvider: Microsoft user detected, fetching fresh data from GetUser API');
+            try {
             const response = await fetch('/api/user', {
               method: 'GET',
               headers: {
@@ -113,10 +120,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const errorText = await response.text();
               console.error('❌ AuthProvider: Error details:', errorText);
             }
-          } catch (apiError) {
-            console.warn('⚠️ AuthProvider: Could not refresh user data from API:', apiError)
-            console.log('🔍 AuthProvider: Keeping saved user data as fallback');
-            // Keep using saved user data if API fails
+            } catch (apiError) {
+              console.warn('⚠️ AuthProvider: Could not refresh user data from API:', apiError)
+              console.log('🔍 AuthProvider: Keeping saved user data as fallback');
+              // Keep using saved user data if API fails
+            }
+          } else {
+            console.log('🔍 AuthProvider: OTP user detected, using saved data without API call');
+            // For OTP users, we already have complete data, just validate userRoleID
+            if (!savedUser?.userRoleID || ![1, 2, 3].includes(savedUser.userRoleID)) {
+              console.error('❌ Invalid or missing userRoleID for OTP user:', savedUser?.userRoleID, '- Logging out user')
+              logout()
+              return
+            }
           }
         }
       } catch (error) {
@@ -205,12 +221,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Role-based helper functions
   const userHasPermission = (permission: Permission) => {
     if (!user || !user.userRoleID) return false
-    return hasPermission(user.userRoleID as UserRole, permission)
+    return hasPermissionWithAgencyType(user.userRoleID as UserRole, permission, user.agencyType)
   }
 
   const userCanAccessView = (view: View) => {
     if (!user || !user.userRoleID) return false
-    return canAccessView(user.userRoleID as UserRole, view)
+    return canAccessViewWithAgencyType(user.userRoleID as UserRole, view, user.agencyType)
   }
 
   const userGetPermissions = () => {

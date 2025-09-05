@@ -9,7 +9,10 @@ import {
   USER_ROLES, 
   ROLE_PERMISSIONS, 
   ROLE_VIEWS,
-  UserWithRole
+  UserWithRole,
+  canAccessUserManagement,
+  PERMISSIONS,
+  VIEWS
 } from './types/roles'
 
 /**
@@ -21,11 +24,45 @@ export const hasPermission = (userRole: UserRole, permission: Permission): boole
 }
 
 /**
+ * Enhanced permission check that considers agency type for specific permissions
+ */
+export const hasPermissionWithAgencyType = (
+  userRole: UserRole, 
+  permission: Permission, 
+  agencyType?: string
+): boolean => {
+  // Handle special case for USER_MANAGEMENT permission with agency type
+  if (permission === PERMISSIONS.USER_MANAGEMENT) {
+    return canAccessUserManagement(userRole, agencyType)
+  }
+  
+  // Default to standard permission check
+  return hasPermission(userRole, permission)
+}
+
+/**
  * Check if a user can access a specific view
  */
 export const canAccessView = (userRole: UserRole, view: View): boolean => {
   const roleViews = ROLE_VIEWS[userRole] || []
   return roleViews.includes(view)
+}
+
+/**
+ * Enhanced view access check that considers agency type for specific views
+ */
+export const canAccessViewWithAgencyType = (
+  userRole: UserRole, 
+  view: View, 
+  agencyType?: string
+): boolean => {
+  // Handle special case for USER_MANAGEMENT view with agency type
+  if (view === VIEWS.USER_MANAGEMENT) {
+    return canAccessUserManagement(userRole, agencyType)
+  }
+  
+  // Default to standard view access check
+  return canAccessView(userRole, view)
 }
 
 /**

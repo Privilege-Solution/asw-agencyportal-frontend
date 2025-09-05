@@ -62,6 +62,9 @@ export function Sidebar() {
               <Shield className="h-4 w-4 text-gray-500" />
               <span className="text-xs text-gray-600">
                 {user.userRoleName || `Role ${user.userRoleID}`}
+                {user.agencyType && (
+                  <span className="ml-1 text-blue-600">({user.agencyType})</span>
+                )}
               </span>
             </div>
           </div>

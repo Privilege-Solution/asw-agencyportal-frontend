@@ -80,3 +80,13 @@ export interface Agency {
   projectIDs: number[]
   members?: any[]
 }
+
+export interface Agent {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  agencyID: string
+  isActive: boolean
+  createDate: string
+}

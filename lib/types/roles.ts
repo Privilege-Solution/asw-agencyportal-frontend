@@ -74,6 +74,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     PERMISSIONS.LEADS,
     PERMISSIONS.FILE_UPLOAD
     // Limited permissions - only their own data
+    // Note: USER_MANAGEMENT permission for agencies is handled separately based on agency type
   ]
 }
 
@@ -120,7 +121,23 @@ export const ROLE_VIEWS: Record<UserRole, View[]> = {
     VIEWS.LEADS,
     VIEWS.FILE_UPLOAD
     // Limited views
+    // Note: USER_MANAGEMENT view for agencies is handled separately based on agency type
   ]
+}
+
+// Helper functions for agency-specific permissions
+export const hasAgencyUserManagement = (userRoleID: number, agencyType?: string): boolean => {
+  return userRoleID === USER_ROLES.AGENCY && agencyType === 'agency'
+}
+
+export const canAccessUserManagement = (userRoleID: number, agencyType?: string): boolean => {
+  // Super admin and admin always have access
+  if (userRoleID === USER_ROLES.SUPER_ADMIN || userRoleID === USER_ROLES.ADMIN) {
+    return true
+  }
+  
+  // Agency role with agency type also has access
+  return hasAgencyUserManagement(userRoleID, agencyType)
 }
 
 // Helper type for user with role information
