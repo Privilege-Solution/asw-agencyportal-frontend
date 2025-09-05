@@ -45,3 +45,32 @@ export interface User {
   updateDate: string
   isActive: boolean
 }
+
+export interface Agency {
+  id: string
+  refCode: string
+  name: string
+  description: string
+  email: string
+  tel: string
+  agencyTypeID: number
+  createBy: string
+  createDate: string
+  updateBy: string
+  updateDate: string
+  isActive: boolean
+  firstName: string
+  lastName: string
+  agencyType: {
+    id: number
+    name: string
+    description: string
+    createBy: string | null
+    createDate: string
+    updateBy: string | null
+    updateDate: string
+    isActive: boolean
+  }
+  projectIDs: number[]
+  members?: any[]
+}

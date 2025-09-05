@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
   }, [])
 
-  const login = (method: AuthMethod, userData?: Partial<User>, token?: string) => {
+  const login = async (method: AuthMethod, userData?: Partial<User>, token?: string) => {
     console.log('🔄 User data:', userData)
     
     // Validate userRoleID - must be 1, 2, or 3 (null/undefined not allowed)

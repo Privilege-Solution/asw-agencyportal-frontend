@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Shield, ArrowLeft } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
-import { requestOtp } from "@/hooks/use-otp"
+import { requestOtp, submitOtp } from "@/hooks/use-otp"
 
 interface EmailOtpFormProps {
   // No props needed as we use context
@@ -22,6 +22,15 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
   const [otp, setOtp] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [requestOtpError, setRequestOtpError] = useState("")
+  const [submitOtpError, setSubmitOtpError] = useState("")
+
+  const handleEditEmail = () => {
+    setStep("email")
+    setEmail("")
+    setOtp("")
+    setRequestOtpError("")
+    setSubmitOtpError("")
+  }
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,27 +59,29 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (otp !== "000000") {
-      alert("Invalid OTP. Please enter 000000")
-      return
+
+    console.log('OTP submitted:', otp)
+
+    try {
+      const { success, error, data } = await submitOtp(email, otp)
+      if (success) {
+        // Success - move to OTP step
+        console.log('Success - OTP submitted data:', data)
+        login('email', {
+          email: email,
+          displayName: email.split('@')[0]
+        }, data.token)
+      } else {
+        // Error response
+        setSubmitOtpError(error)
+        console.error('Failed to submit OTP:', error)
+      }
+    } catch (error) {
+      console.error('Error submitting OTP:', error)
     }
 
     setIsLoading(true)
     
-    try {
-      // Generate a mock OTP token for this session
-      const otpToken = 'otp-token-' + email + '-' + Date.now()
-      
-      // Login with basic info and token - login() will automatically fetch complete user data
-      await login('email', {
-        email: email,
-        displayName: email.split('@')[0]
-      }, otpToken)
-    } catch (error) {
-      console.error('Error during OTP login:', error)
-    } finally {
-      setIsLoading(false)
-    }
   }
 
   return (
@@ -114,7 +125,7 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
         ) : (
           <form onSubmit={handleOtpSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="otp">Enter OTP</Label>
+              <Label htmlFor="otp" className="hidden">Enter OTP</Label>
               <Input
                 id="otp"
                 type="text"
@@ -122,23 +133,28 @@ export function EmailOtpForm({}: EmailOtpFormProps) {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 maxLength={6}
-                className="text-center text-lg tracking-widest"
+                className="text-center tracking-widest h-auto md:text-2xl"
                 required
               />
-              <p className="text-sm text-gray-500">OTP sent to {email}</p>
+              <p className="text-sm text-gray-500">รหัส OTP ถูกส่งไปยัง {email}</p>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Verifying..." : "Verify OTP"}
+            <Button type="submit" className="w-full bg-blue-800 hover:bg-blue-900" disabled={isLoading}>
+              {isLoading ? "กำลังตรวจสอบ..." : "ตรวจสอบรหัส OTP"}
             </Button>
             <div className="flex gap-2">
-              <Button type="button" variant="ghost" className="flex-1" onClick={() => setStep("email")}>
-                Back to Email
+              <Button type="button" variant="ghost" className="flex-1" onClick={handleEditEmail}>
+                แก้ไขอีเมล
               </Button>
               <Button type="button" variant="ghost" className="flex-1" onClick={() => setAuthMethod(null)}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Login Options
+                กลับหน้าลงชื่อเข้าใช้
               </Button>
             </div>
+            {submitOtpError && (
+              <div className="text-red-600 text-sm mt-2">
+                {submitOtpError}
+              </div>
+            )}
           </form>
         )}
       </CardContent>
