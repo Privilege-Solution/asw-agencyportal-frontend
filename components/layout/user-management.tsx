@@ -16,6 +16,7 @@ import { cookieUtils } from '@/lib/cookie-utils'
 import { Agency, Agent, User } from '@/app/types'
 import { RoleGuard } from '@/components/rbac/RoleGuard'
 import { USER_ROLES } from '@/lib/types/roles'
+import { useGetAgencyById } from '@/hooks/useGetData'
 
 // Extend the existing Agency interface to add UI-specific properties
 interface AgencyWithUIFlags extends Agency {
@@ -38,7 +39,9 @@ function UserManagement() {
   const [isAgencyDialogOpen, setIsAgencyDialogOpen] = useState(false)
   const [isAgentDialogOpen, setIsAgentDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<UserWithType | null>(null)
-  
+  const [currentAgency, setCurrentAgency] = useState<Agency | null>(null)
+  const [agentList, setAgentList] = useState<Agent[]>([])
+
   // Pagination and search states for agencies
   const [agencySearchStr, setAgencySearchStr] = useState('')
   const [agencyTypeFilter, setAgencyTypeFilter] = useState<number>(0)
@@ -46,6 +49,17 @@ function UserManagement() {
   const [currentPage, setCurrentPage] = useState(1)
   const [perPage] = useState(10)
   const [totalAgencies, setTotalAgencies] = useState(0)
+
+  useEffect(() => {
+    if (user?.agencyID) {
+      useGetAgencyById(user.agencyID.toString(), cookieUtils.getAuthToken()).then((data) => {
+        const current = data.data;
+        setCurrentAgency(current)
+        setAgentList(current.members)
+      })
+    }
+    //console.log(currentAgency)
+  }, [])
   
   // Form states
   const [newAgency, setNewAgency] = useState({
@@ -183,37 +197,7 @@ function UserManagement() {
   }
 
   const loadAgents = async () => {
-    try {
-      const token = cookieUtils.getAuthToken()
-      if (!token) {
-        throw new Error('No auth token found')
-      }
-
-      if (!user?.agencyID) {
-        throw new Error('No agency ID found for current user')
-      }
-
-      const response = await fetch(`/api/agent/list?agencyID=${user.agencyID}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      const result = await response.json()
-      
-      if (result.success && result.data) {
-        setAgents(result.data)
-      } else {
-        throw new Error(result.error || 'Failed to load agents')
-      }
-    } catch (error) {
-      console.error('Error loading agents:', error)
-      // Fallback to empty array
-      setAgents([])
-      throw error
-    }
+    return;
   }
 
   const loadUsers = async () => {
@@ -468,7 +452,7 @@ function UserManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+          <h1 className="text-2xl font-medium text-gray-900">User Management</h1>
           <p className="text-gray-600">
             {canViewAllAgencies && "Manage agencies and users in the system"}
             {canCreateAgent && "Manage agents in your agency"}
@@ -582,7 +566,7 @@ function UserManagement() {
                   <DialogTrigger asChild>
                     <Button onClick={() => setEditingUser(null)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Create Agent
+                      เพิ่ม Agent
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
@@ -712,7 +696,7 @@ function UserManagement() {
       )}
       
       {canCreateAgent && (
-        <AgentListView agents={agents} />
+        <AgentListView agents={agentList} />
       )}
     </div>
   )
@@ -843,7 +827,7 @@ function CreateAgentForm({ newAgent, setNewAgent, onSubmit }: {
       
       <DialogFooter>
         <Button onClick={onSubmit} className="bg-blue-600 hover:bg-blue-700">
-          Create Agent
+          เพิ่ม Agent
         </Button>
       </DialogFooter>
     </div>
@@ -1004,6 +988,8 @@ function AgencyListView({
 
 // Agent List View Component
 function AgentListView({ agents }: { agents: Agent[] }) {
+  if (agents.length === 0) { return <p className="text-center text-gray-500">ไม่พบ Agent ใน Agency นี้</p>; }
+
   return (
     <Card>
       <CardHeader>
