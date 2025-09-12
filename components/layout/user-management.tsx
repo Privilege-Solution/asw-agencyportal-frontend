@@ -571,9 +571,9 @@ function UserManagement() {
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                      <DialogTitle>Create New Agent</DialogTitle>
+                      <DialogTitle>เพิ่ม Agent ใหม่ | <span className="text-blue-900">{currentAgency?.name}</span></DialogTitle>
                       <DialogDescription>
-                        Add a new agent to your agency
+                        กรุณากรอกข้อมูลด้านล่าง
                       </DialogDescription>
                     </DialogHeader>
                     <CreateAgentForm 
@@ -795,7 +795,7 @@ function CreateAgentForm({ newAgent, setNewAgent, onSubmit }: {
   return (
     <div className="grid gap-4 py-4">
       <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="agent-email" className="text-right">Email</Label>
+        <Label htmlFor="agent-email" className="text-right">อีเมล</Label>
         <Input
           id="agent-email"
           type="email"
@@ -806,7 +806,7 @@ function CreateAgentForm({ newAgent, setNewAgent, onSubmit }: {
       </div>
       
       <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="agent-first-name" className="text-right">First Name</Label>
+        <Label htmlFor="agent-first-name" className="text-right">ชื่อ</Label>
         <Input
           id="agent-first-name"
           value={newAgent.firstName}
@@ -816,7 +816,7 @@ function CreateAgentForm({ newAgent, setNewAgent, onSubmit }: {
       </div>
       
       <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="agent-last-name" className="text-right">Last Name</Label>
+        <Label htmlFor="agent-last-name" className="text-right">นามสกุล</Label>
         <Input
           id="agent-last-name"
           value={newAgent.lastName}
