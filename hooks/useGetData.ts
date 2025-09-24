@@ -1,5 +1,11 @@
-export const useGetAgencies = async () => {
-    const response = await fetch(`/api/Agency/GetAgenciesByPagination`)
+export const useGetAgencies = async (authToken: string | undefined) => {
+    const response = await fetch(`/api/Agency/GetAgenciesByPagination`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+        },
+    })
     const data = await response.json()
     return data
 }

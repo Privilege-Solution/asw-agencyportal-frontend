@@ -16,7 +16,7 @@ import { cookieUtils } from '@/lib/cookie-utils'
 import { Agency, Agent, User } from '@/app/types'
 import { RoleGuard } from '@/components/rbac/RoleGuard'
 import { USER_ROLES } from '@/lib/types/roles'
-import { useGetAgencyById } from '@/hooks/useGetData'
+import { useGetAgencyById, useGetAgencies } from '@/hooks/useGetData'
 
 // Extend the existing Agency interface to add UI-specific properties
 interface AgencyWithUIFlags extends Agency {
@@ -26,6 +26,25 @@ interface AgencyWithUIFlags extends Agency {
 // Extend User interface for UI-specific properties
 interface UserWithType extends User {
   userType?: 'agency' | 'agent'
+}
+
+// Form model for creating an agency (only fields used in the UI/API payload)
+interface CreateAgencyFormData {
+  name: string
+  email: string
+  tel: string
+  firstName: string
+  lastName: string
+  agencyTypeID: number
+  projectIDs: number[]
+}
+
+// Form model for creating an agent
+interface CreateAgentFormData {
+  email: string
+  firstName: string
+  lastName: string
+  agencyID: string
 }
 
 function UserManagement() {
@@ -62,16 +81,17 @@ function UserManagement() {
   }, [])
   
   // Form states
-  const [newAgency, setNewAgency] = useState({
+  const [newAgency, setNewAgency] = useState<CreateAgencyFormData>({
     name: '',
     email: '',
     tel: '',
     firstName: '',
     lastName: '',
-    agencyTypeID: 1
+    agencyTypeID: 1,
+    projectIDs: []
   })
   
-  const [newAgent, setNewAgent] = useState({
+  const [newAgent, setNewAgent] = useState<CreateAgentFormData>({
     email: '',
     firstName: '',
     lastName: '',
@@ -144,7 +164,7 @@ function UserManagement() {
         projectID
       }
 
-      const response = await fetch('/api/agency/list', {
+      const response = await fetch('/api/Agency/list', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -276,7 +296,7 @@ function UserManagement() {
         throw new Error('No auth token found')
       }
 
-      const response = await fetch('/api/agency/create', {
+      const response = await fetch('/api/Agency/create', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -300,7 +320,8 @@ function UserManagement() {
           tel: '',
           firstName: '',
           lastName: '',
-          agencyTypeID: 1
+          agencyTypeID: 1,
+          projectIDs: []
         })
         
         await loadAgencies()
@@ -704,7 +725,7 @@ function UserManagement() {
 
 // Create Agency Form Component
 function CreateAgencyForm({ newAgency, setNewAgency, onSubmit }: {
-  newAgency: any
+  newAgency: CreateAgencyFormData
   setNewAgency: (agency: any) => void
   onSubmit: () => void
 }) {
@@ -776,6 +797,23 @@ function CreateAgencyForm({ newAgency, setNewAgency, onSubmit }: {
           </SelectContent>
         </Select>
       </div>
+
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="agency-project-ids" className="text-right">โครงการที่รับผิดชอบ</Label>
+        <Select
+          value={newAgency.projectIDs.join(',')}
+          onValueChange={(value) => setNewAgency({...newAgency, projectIDs: value.split(',').map(Number)})}
+        >
+          <SelectTrigger className="col-span-3">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1">Project 1</SelectItem>
+            <SelectItem value="2">Project 2</SelectItem>
+            <SelectItem value="3">Project 3</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       
       <DialogFooter>
         <Button onClick={onSubmit} className="bg-blue-600 hover:bg-blue-700">
@@ -788,7 +826,7 @@ function CreateAgencyForm({ newAgency, setNewAgency, onSubmit }: {
 
 // Create Agent Form Component
 function CreateAgentForm({ newAgent, setNewAgent, onSubmit }: {
-  newAgent: any
+  newAgent: CreateAgentFormData
   setNewAgent: (agent: any) => void
   onSubmit: () => void
 }) {

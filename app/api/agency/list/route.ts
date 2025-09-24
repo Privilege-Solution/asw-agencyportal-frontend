@@ -44,21 +44,20 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json()
     
-    console.log('External API Response:', data) // Debug log
-    console.log('Response status:', response.status, response.statusText) // Debug log
+    // console.log('External API Response:', data) // Debug log
+    // console.log('Response status:', response.status, response.statusText) // Debug log
     
     if (response.ok) {
       // Handle different possible data structures
-      let agenciesData = data.data || data.agencies || data
+      let agenciesData = data.data.agencies;
       
       // If agenciesData is not an array, try to extract from common structures
       if (!Array.isArray(agenciesData)) {
-        if (data.result && Array.isArray(data.result)) {
-          agenciesData = data.result
-        } else if (data.items && Array.isArray(data.items)) {
-          agenciesData = data.items
+        console.log('data', agenciesData)
+        if (agenciesData && Array.isArray(agenciesData)) {
+          agenciesData = agenciesData
         } else {
-          console.warn('Unexpected data structure from external API:', data)
+          console.warn('Unexpected data structure from external API:', agenciesData)
           agenciesData = []
         }
       }

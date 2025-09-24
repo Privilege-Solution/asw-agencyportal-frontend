@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest, response: NextResponse) {
   try {
     // Get auth token from header
     const authHeader = request.headers.get('authorization')
@@ -27,23 +27,53 @@ export async function POST(request: NextRequest) {
     }
 
     // Create FormData for the API call
-    const formData = new FormData()
-    formData.append('Name', agencyData.name)
-    formData.append('Email', agencyData.email)
-    formData.append('Tel', agencyData.tel)
-    formData.append('FirstName', agencyData.firstName)
-    formData.append('LastName', agencyData.lastName)
-    formData.append('AgencyTypeID', agencyData.agencyTypeID.toString())
+    const requestBody = {
+      name: agencyData.name,
+      description: agencyData.description || '',
+      email: agencyData.email,
+      tel: agencyData.tel,
+      isActive: agencyData.isActive || true,
+      firstName: agencyData.firstName,
+      lastName: agencyData.lastName,
+      agencyTypeID: agencyData.agencyTypeID,
+      projectIDs: agencyData.projectIDs
+    }
 
-    const response = await fetch(process.env.NEXT_PUBLIC_API_PATH + 'Agency/CreateAgency', {
+    console.log(requestBody)
+
+    const response = await fetch(process.env.NEXT_PUBLIC_API_PATH + 'Agency/SaveAgency', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-      body: formData,
+      body: JSON.stringify(requestBody),
     })
 
-    const data = await response.json()
+    console.log(response)
+
+    // Check if response has content and is JSON
+    let data: any = {}
+    const contentType = response.headers.get('content-type')
+    const responseText = await response.text()
+    
+    if (responseText && contentType?.includes('application/json')) {
+      try {
+        data = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', responseText)
+        return NextResponse.json(
+          { error: 'Invalid JSON response from API', details: responseText },
+          { status: 500 }
+        )
+      }
+    } else if (responseText) {
+      // If we have text but it's not JSON, treat it as an error message
+      data = { error: responseText }
+    } else {
+      // Empty response
+      data = { error: 'Empty response from API' }
+    }
     
     if (response.ok) {
       return NextResponse.json({
