@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { cookieUtils } from './cookie-utils'
+import { getApiPath } from './asset-utils'
 import { UserRole, USER_ROLES } from './types/roles'
 import { hasPermission, canAccessView, getUserPermissions, getUserViews, hasPermissionWithAgencyType, canAccessViewWithAgencyType } from './rbac'
 import type { Permission, View } from './types/roles'
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!isOTPUser) {
             console.log('🔍 AuthProvider: Microsoft user detected, fetching fresh data from GetUser API');
             try {
-            const response = await fetch('/api/user', {
+            const response = await fetch(getApiPath('api/user'), {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',

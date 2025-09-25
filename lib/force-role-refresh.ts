@@ -4,6 +4,7 @@
  */
 
 import { cookieUtils } from './cookie-utils'
+import { getApiPath } from './asset-utils'
 
 export const forceRoleRefresh = async () => {
   console.log('🔄 FORCING ROLE REFRESH FROM API...')
@@ -18,7 +19,7 @@ export const forceRoleRefresh = async () => {
 
     console.log('📡 Calling GetUser API...')
     
-    const response = await fetch('/api/user', {
+    const response = await fetch(getApiPath('api/user'), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

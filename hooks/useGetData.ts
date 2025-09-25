@@ -1,5 +1,5 @@
 export const useGetAgencies = async (authToken: string | undefined) => {
-    const response = await fetch(`/api/Agency/GetAgenciesByPagination`, {
+    const response = await fetch(`/agency/api/Agency/GetAgenciesByPagination`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -12,7 +12,7 @@ export const useGetAgencies = async (authToken: string | undefined) => {
 
 export const useGetAgencyById = async (agencyID: string, authToken: string | undefined) => {
     console.log('getting agency by id : ', agencyID)
-    const response = await fetch(`/api/Agency/GetAgencyByID?agencyID=${agencyID}`, {
+    const response = await fetch(`/agency/api/Agency/GetAgencyByID?agencyID=${agencyID}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

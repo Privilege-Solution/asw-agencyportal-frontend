@@ -53,14 +53,12 @@ export function AgentForm({ initialData, onSubmit, onCancel }: AgentFormProps) {
   const handleSubmit = (data: AgentFormData) => {
     const agentData: Agent = {
       agencyID: user?.id || '', // Current agency user's ID
-      agentID: data.agentID || `agent-${Date.now()}`, // Generate ID if not provided
+      id: data.agentID || `agent-${Date.now()}`, // Generate ID if not provided
       isActive: data.isActive,
-      agent: {
-        firstName: data.agent.firstName,
-        lastName: data.agent.lastName,
-        email: data.agent.email,
-        tel: data.agent.tel
-      }
+      firstName: data.agent.firstName,
+      lastName: data.agent.lastName,
+      email: data.agent.email,
+      createDate: new Date().toISOString()
     }
     onSubmit(agentData)
   }

@@ -2,6 +2,8 @@
  * Agency authentication utilities for OTP flow
  */
 
+import { getApiPath } from './asset-utils'
+
 export interface AgencyAccessTokenResponse {
   success: boolean
   data?: {
@@ -46,7 +48,7 @@ export interface AgencyDataResponse {
  */
 export const getAgencyAccessToken = async (token: string): Promise<AgencyAccessTokenResponse> => {
   try {
-    const response = await fetch('/api/AgencyAuth/GetAccessToken', {
+    const response = await fetch(getApiPath('api/AgencyAuth/GetAccessToken'), {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -86,7 +88,7 @@ export const getAgencyAccessToken = async (token: string): Promise<AgencyAccessT
  */
 export const getAgencyById = async (agencyID: string | number, token: string): Promise<AgencyDataResponse> => {
   try {
-    const response = await fetch(`/api/AgencyAuth/GetAgencyByID?agencyID=${agencyID}`, {
+    const response = await fetch(`/agency/api/AgencyAuth/GetAgencyByID?agencyID=${agencyID}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { getApiPath } from '@/lib/asset-utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -164,7 +165,7 @@ function UserManagement() {
         projectID
       }
 
-      const response = await fetch('/api/Agency/list', {
+      const response = await fetch(getApiPath('api/Agency/list'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -296,7 +297,7 @@ function UserManagement() {
         throw new Error('No auth token found')
       }
 
-      const response = await fetch('/api/Agency/create', {
+      const response = await fetch(getApiPath('api/Agency/create'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -363,7 +364,7 @@ function UserManagement() {
         throw new Error('No auth token found')
       }
 
-      const response = await fetch('/api/agent/create', {
+      const response = await fetch(getApiPath('api/agent/create'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

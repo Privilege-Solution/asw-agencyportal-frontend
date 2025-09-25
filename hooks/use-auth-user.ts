@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { cookieUtils } from '@/lib/cookie-utils'
+import { getApiPath } from '@/lib/asset-utils'
 
 interface UseAuthUserReturn {
   loading: boolean
@@ -33,7 +34,7 @@ export const useAuthUser = (): UseAuthUserReturn => {
 
       console.log('🔍 Fetching user data from GetUser API...')
 
-      const response = await fetch('/api/user', {
+      const response = await fetch(getApiPath('api/user'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
