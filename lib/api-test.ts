@@ -1,5 +1,5 @@
 import { cookieUtils } from './cookie-utils'
-import { getApiPath } from './asset-utils'
+import { apiCall } from './api-utils'
 
 /**
  * Test function to get auth token from cookie and call GetUser API
@@ -18,7 +18,7 @@ export const testGetUser = async (): Promise<void> => {
     console.log('🔑 Auth token found:', authToken.substring(0, 20) + '...')
 
     // Make API call to our Next.js API route (bypasses CORS)
-    const response = await fetch(getApiPath('api/user'), {
+    const response = await apiCall('/user', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

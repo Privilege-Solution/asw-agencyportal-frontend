@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { cookieUtils } from '@/lib/cookie-utils'
-import { getApiPath } from '@/lib/asset-utils'
+import { apiCall } from '@/lib/api-utils'
 
 interface User {
   // Define the expected user structure from your API
@@ -41,7 +41,7 @@ export const useGetUser = (): UseGetUserReturn => {
       console.log('🔑 Making GetUser API call via Next.js API route...')
 
       // Make API call to our Next.js API route (no CORS issues)
-      const response = await fetch(getApiPath('api/user'), {
+      const response = await apiCall('/user', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

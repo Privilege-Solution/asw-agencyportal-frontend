@@ -18,6 +18,7 @@ import { Agency, Agent, User } from '@/app/types'
 import { RoleGuard } from '@/components/rbac/RoleGuard'
 import { USER_ROLES } from '@/lib/types/roles'
 import { useGetAgencyById, useGetAgencies } from '@/hooks/useGetData'
+import { apiCall } from '@/lib/api-utils'
 
 // Extend the existing Agency interface to add UI-specific properties
 interface AgencyWithUIFlags extends Agency {
@@ -165,7 +166,7 @@ function UserManagement() {
         projectID
       }
 
-      const response = await fetch(getApiPath('api/Agency/list'), {
+      const response = await apiCall('/Agency/list', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -297,7 +298,7 @@ function UserManagement() {
         throw new Error('No auth token found')
       }
 
-      const response = await fetch(getApiPath('api/Agency/create'), {
+      const response = await apiCall('/Agency/create', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -364,7 +365,7 @@ function UserManagement() {
         throw new Error('No auth token found')
       }
 
-      const response = await fetch(getApiPath('api/agent/create'), {
+      const response = await apiCall('/agent/create', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

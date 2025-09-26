@@ -4,7 +4,7 @@
  */
 
 import { cookieUtils } from './cookie-utils'
-import { getApiPath } from './asset-utils'
+import { apiCall } from './api-utils'
 
 export const quickGetUserTest = async () => {
   console.log('🚀 Starting GetUser API test...')
@@ -26,7 +26,7 @@ export const quickGetUserTest = async () => {
     
     const startTime = Date.now()
     
-    const response = await fetch(getApiPath('api/user'), {
+    const response = await apiCall('/user', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ if (typeof window !== 'undefined') {
   (window as any).quickGetUserTest = quickGetUserTest
   
   // Also provide a simpler name
-  (window as any).testAPI = quickGetUserTest
+  //(window as any).testAPI = quickGetUserTest
   
   console.log('🎯 Quick test functions loaded!')
   console.log('Run: quickGetUserTest() or testAPI() in console')

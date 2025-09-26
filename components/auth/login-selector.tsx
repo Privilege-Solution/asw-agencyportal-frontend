@@ -8,8 +8,7 @@ import { useAuth, type AuthMethod } from "@/lib/auth-context"
 import { alert } from "@/hooks/use-alert"
 import Image from 'next/image'
 import { cookieUtils } from '@/lib/cookie-utils'
-import { getImagePath, getApiPath } from '@/lib/asset-utils'
-
+import { apiCall } from '@/lib/api-utils'
 
 export function LoginSelector() {
   const { setAuthMethod, login } = useAuth()
@@ -35,8 +34,7 @@ export function LoginSelector() {
           cookieUtils.setAuthToken(accessToken)
           
           // Fetch complete user data from API first
-          const userResponse = await fetch(getApiPath('/agency/api/user'), {
-            method: 'GET',
+          const userResponse = await apiCall('/user', {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${accessToken}`

@@ -3,7 +3,7 @@
  * This should work without any import issues
  */
 
-import { getApiPath } from './asset-utils'
+import { apiCall } from './api-utils'
 
 export const simpleGetUserTest = async (): Promise<void> => {
   console.log('🚀 Starting simple GetUser API test...')
@@ -33,7 +33,7 @@ export const simpleGetUserTest = async (): Promise<void> => {
     // Make the API call
     console.log('📡 Making API call to /api/user...')
     
-    const response = await fetch(getApiPath('api/user'), {
+    const response = await apiCall('/user', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

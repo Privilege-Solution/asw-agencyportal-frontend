@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { cookieUtils } from '@/lib/cookie-utils'
-import { getApiPath } from '@/lib/asset-utils'
+import { apiCall } from '@/lib/api-utils'
 
 interface UseAuthUserReturn {
   loading: boolean
@@ -34,7 +34,7 @@ export const useAuthUser = (): UseAuthUserReturn => {
 
       console.log('🔍 Fetching user data from GetUser API...')
 
-      const response = await fetch(getApiPath('api/user'), {
+      const response = await apiCall('/user', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -53,8 +53,9 @@ export const useAuthUser = (): UseAuthUserReturn => {
       login('email', {
         id: userData.id || userData.employeeId || 'api-user',
         email: userData.email,
-        name: userData.displayName || userData.givenName || userData.email,
-        role: userData.role, // This comes from the API mapping
+        displayName: userData.displayName || userData.givenName || userData.email,
+        givenName: userData.givenName || '',
+        surename: userData.surename || '',
         userRoleID: userData.userRoleID,
         userRoleName: userData.userRoleName,
         departmentID: userData.departmentID,
@@ -62,8 +63,11 @@ export const useAuthUser = (): UseAuthUserReturn => {
         jobTitle: userData.jobTitle,
         projectIDs: userData.projectIDs,
         // Additional fields that might be in the API response
-        agencyId: userData.agencyId,
-        subRole: userData.subRole
+        agencyID: userData.agencyID,
+        agencyName: userData.agencyName,
+        agencyType: userData.agencyType,
+        agencyTypeID: userData.agencyTypeID,
+        refCode: userData.refCode
       }, authToken)
 
     } catch (err) {
