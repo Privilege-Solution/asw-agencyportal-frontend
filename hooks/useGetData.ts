@@ -27,3 +27,15 @@ export const useGetAgencyById = async (agencyID: string, authToken: string | und
     const data = await response.json()
     return data
 }
+
+export const useGetProjects = async (authToken: string | undefined) => {
+    const response = await fetch('/agency/api/Project/GetProjects', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+        },
+    })
+    const data = await response.json()
+    return data
+}

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { AuthDebugger } from "@/components/test/AuthDebugger"
 import LeadForm from "../methods/LeadForm"
 import LeadsMethod from "./LeadsMethod"
+import { Toast } from "../ui/toast"
 
 const stats = [
   {

@@ -1,4 +1,4 @@
-import { getApiPath } from '@/lib/asset-utils'
+import { apiCall } from '@/lib/api-utils'
 
 export const requestOtp = async (email: string) => {
     let isLoading = true
@@ -7,7 +7,7 @@ export const requestOtp = async (email: string) => {
     let data = null
 
     try {
-      const response = await fetch(getApiPath('api/AgencyAuth/RequestOTP'), {
+      const response = await apiCall('/AgencyAuth/RequestOTP', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,7 +42,7 @@ export const submitOtp = async (email: string, otp: string) => {
     let data = null
 
     try {
-      const response = await fetch(getApiPath('api/AgencyAuth/SubmitOTP'), {
+      const response = await apiCall('/AgencyAuth/SubmitOTP', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

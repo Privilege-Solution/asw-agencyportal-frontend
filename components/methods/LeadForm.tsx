@@ -1,27 +1,107 @@
 import { Input } from "@/components/ui/input"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { Lead } from "@/app/types";
+import { Lead, Project } from "@/app/types";
+import { toast } from "@/hooks/use-toast";
+import { useGetProjects } from "@/hooks/useGetData";
+import { cookieUtils } from "@/lib/cookie-utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSaveLead } from "@/hooks/useSaveData";
 
 function LeadForm({ setSelectedMethod }: { setSelectedMethod: (method: string | null) => void }) {
   const [sourceUrl, setSourceUrl] = useState<string>('')
   const [utmData, setUtmData] = useState<string[]>([])
-  const [leadData, setLeadData] = useState<Lead>()
+  const [projects, setProjects] = useState<Project[]>([])
+  const { user } = useAuth()
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const projects = await useGetProjects(cookieUtils.getAuthToken())
+      //console.log('Projects:', projects)
+      setProjects(projects.data)
+    }
+    fetchProjects()
+  }, [user])
+
+  const [leadData, setLeadData] = useState<Lead>({
+    projectID: 0,
+    refDate: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+    firstName: '',
+    lastName: '',
+    tel: '',
+    email: '',
+    refDetail: new Date().toISOString(),
+    utm_source: '',
+    utm_medium: '',
+    utm_campaign: '',
+    utm_term: '',
+    utm_content: '',
+    priceInterest: '',
+    modelInterest: '',
+    promoCode: '',
+    purchasePurpose: '',
+    appointDate: '',
+    appointTime: '',
+    appointTimeEnd: '',
+    lineID: '',
+  })
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const requiredFields = ['firstName', 'lastName', 'tel', 'email']
+    const missingFields = requiredFields.filter(field => !leadData[field as keyof Lead])
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields)
+      return
+    }
+    const requestBody = {
+      ...leadData
+    }
+    const saveLead = await useSaveLead(cookieUtils.getAuthToken(), requestBody)
+    console.log('Lead data:', saveLead)
+  }
 
   const handleCancel = () => {
     setSelectedMethod(null)
-    setUtmData([])
-    setSourceUrl('')
+    //setUtmData([])
+    //setSourceUrl('')
   }
+
+  useEffect(() => {
+    //console.log('UTM data:', utmData)
+    if (utmData.length > 0) {
+      // Create an object with all UTM updates
+      const utmUpdates: Partial<Lead> = {}
+      utmData.forEach((utm) => {
+        const [key, value] = utm.split(':')
+        
+        // Only update UTM-related fields that exist in the Lead interface
+        const utmFields = ['utm_source', 'utm_campaign', 'utm_medium', 'utm_term', 'utm_content', 'utm_id']
+        if (utmFields.includes(key)) {
+          (utmUpdates as any)[key] = value
+        }
+      })
+      
+      // Update leadData with all UTM data at once
+      setLeadData(prevLeadData => ({
+        ...prevLeadData,
+        ...utmUpdates
+      }))
+    }
+  }, [utmData])
 
   useEffect(() => {
     if (sourceUrl) {
       try {
         const url = new URL(sourceUrl)
         const queryParams = Object.fromEntries(url.searchParams.entries())
-        const utmData = Object.entries(queryParams).map(([key, value]) => `${key}: ${value}`)
+        const utmData = Object.entries(queryParams).map(([key, value]) => `${key}:${value}`)
         setUtmData(utmData)
       } catch (error) {
+        toast({
+          title: 'Invalid URL',
+          variant: 'destructive',
+        })
         console.error('Invalid URL:', error)
       }
     }
@@ -29,9 +109,28 @@ function LeadForm({ setSelectedMethod }: { setSelectedMethod: (method: string | 
 
   return (
     <div>
-      <h2 className="text-2xl font-medium">เพิ่มข้อมูลผ่านแบบฟอร์ม</h2>
+      <h2 className="text-2xl font-medium mb-3">เพิ่มข้อมูลผ่านแบบฟอร์ม</h2>
       <div className="form-container">
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="project" className="block  font-medium text-gray-700 mb-1">เลือกโครงการ</label>
+            <Select
+              name="project"
+              value={leadData?.projectID.toString()}
+              onValueChange={(value) => setLeadData({ ...leadData, projectID: Number(value) })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="เลือกโครงการ" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project.projectID} value={project.projectID.toString()}>
+                    {project.projectName} [ ID : {project.projectID} ]
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
               URL <span className="text-red-500 text-lg">*</span>
@@ -76,7 +175,8 @@ function LeadForm({ setSelectedMethod }: { setSelectedMethod: (method: string | 
                 placeholder="ชื่อ"
                 className="w-full"
                 required
-                value={leadData?.Fname}
+                value={leadData?.firstName}
+                onChange={(e) => setLeadData({ ...leadData, firstName: e.target.value })}
               />
             </div>
             <div>
@@ -90,6 +190,8 @@ function LeadForm({ setSelectedMethod }: { setSelectedMethod: (method: string | 
                 placeholder="นามสกุล"
                 className="w-full"
                 required
+                value={leadData?.lastName}
+                onChange={(e) => setLeadData({ ...leadData, lastName: e.target.value })}
               />
             </div>
           </div>
@@ -106,6 +208,8 @@ function LeadForm({ setSelectedMethod }: { setSelectedMethod: (method: string | 
                 placeholder="เบอร์โทรศัพท์"
                 className="w-full"
                 required
+                value={leadData?.tel}
+                onChange={(e) => setLeadData({ ...leadData, tel: e.target.value })}
               />
             </div>
             <div>
@@ -119,6 +223,8 @@ function LeadForm({ setSelectedMethod }: { setSelectedMethod: (method: string | 
                 placeholder="อีเมล"
                 className="w-full"
                 required
+                value={leadData?.email}
+                onChange={(e) => setLeadData({ ...leadData, email: e.target.value })}
               />
             </div>
           </div>
@@ -133,6 +239,8 @@ function LeadForm({ setSelectedMethod }: { setSelectedMethod: (method: string | 
               type="text"
               placeholder="ราคาที่สนใจ"
               className="w-full"
+              value={leadData?.priceInterest}
+              onChange={(e) => setLeadData({ ...leadData, priceInterest: e.target.value })}
             />
           </div>
 
@@ -146,6 +254,8 @@ function LeadForm({ setSelectedMethod }: { setSelectedMethod: (method: string | 
               type="text"
               placeholder="วัตถุประสงค์การซื้อ"
               className="w-full"
+              value={leadData?.purchasePurpose}
+              onChange={(e) => setLeadData({ ...leadData, purchasePurpose: e.target.value })}
             />
           </div>
 
@@ -160,13 +270,17 @@ function LeadForm({ setSelectedMethod }: { setSelectedMethod: (method: string | 
                   name="appointTime"
                   type="time"
                   className="!text-base w-fit"
+                  value={leadData?.appointTime}
+                  onChange={(e) => setLeadData({ ...leadData, appointTime: e.target.value })}
                 />
                 <span className="text-gray-500">ถึง</span>
                 <Input
-                id="appointTimeEnd"
-                name="appointTimeEnd"
-                type="time"
-                className="!text-base w-fit"
+                  id="appointTimeEnd"
+                  name="appointTimeEnd"
+                  type="time"
+                  className="!text-base w-fit"
+                  value={leadData?.appointTimeEnd}
+                  onChange={(e) => setLeadData({ ...leadData, appointTimeEnd: e.target.value })}
                 />
               </div>
             </div>

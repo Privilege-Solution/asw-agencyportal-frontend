@@ -3,6 +3,7 @@ import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
 import { dbHeaventFont } from '@/lib/fonts'
 import { AlertProvider } from '@/components/ui/alert-provider'
+import { Toaster } from '@/components/ui/toaster'
 
 export const metadata: Metadata = {
   title: 'Agency Portal',
@@ -24,6 +25,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <AlertProvider />
+          <Toaster />
         </AuthProvider>
       </body>
     </html>
