@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, User } from 'lucide-react'
+import { getApiPath } from '@/lib/asset-utils'
+import { apiCall } from '@/lib/api-utils'
 
 export function SimpleApiTest() {
   const [loading, setLoading] = useState(false)
@@ -34,7 +36,7 @@ export function SimpleApiTest() {
 
       console.log('🔑 Making API call to /api/user...')
 
-      const response = await fetch('/api/user', {
+      const response = await apiCall('/user', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  //trailingSlash: true,
+  basePath: '/agency',
+  assetPrefix: '/agency',
   eslint: {
     ignoreDuringBuilds: true,
   },

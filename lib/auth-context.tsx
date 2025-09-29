@@ -6,6 +6,7 @@ import { UserRole, USER_ROLES } from './types/roles'
 import { hasPermission, canAccessView, getUserPermissions, getUserViews, hasPermissionWithAgencyType, canAccessViewWithAgencyType } from './rbac'
 import type { Permission, View } from './types/roles'
 import { User } from '@/app/types'
+import { apiCall } from './api-utils'
 
 export type AuthMethod = 'microsoft' | 'email'
 
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!isOTPUser) {
             console.log('🔍 AuthProvider: Microsoft user detected, fetching fresh data from GetUser API');
             try {
-            const response = await fetch('/api/user', {
+              const response = await apiCall('/user', {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',

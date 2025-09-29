@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { AuthDebugger } from "@/components/test/AuthDebugger"
 import LeadForm from "../methods/LeadForm"
 import LeadsMethod from "./LeadsMethod"
+import { Toast } from "../ui/toast"
 
 const stats = [
   {
@@ -224,32 +225,30 @@ export function Dashboard() {
       </SuperAdminOnly>
 
       {/* Agency User Info */}
-      <RoleGuard allowedRoles={[3]}>
-        <div className="mt-8">
-          <h3 className="text-2xl font-medium">ADD LEADS METHODS</h3>
-          <div className="h-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          { addLeadsMethod.map((method, index) => (
-            <Card key={index} className={`border-[3px] ${method.isActive ? 'border-gray-300 bg-gray-50 cursor-pointer hover:border-blue-500' : 'cursor-not-allowed hidden'} ${selectedMethod === method.key ? 'border-blue-500 bg-blue-50' : ''} rounded-xl transition-all duration-300 group`} onClick={() => handleSelectMethod(method.key)}>
-              <CardHeader>
-                <h3 className={`text-xl font-medium ${selectedMethod === method.key ? 'text-blue-800' : 'text-gray-500'} group-hover:text-blue-600`}>{method.title}</h3>
-              </CardHeader>
-              <CardContent>
-                <p className={`text-sm ${method.isActive ? 'text-gray-600' : 'text-gray-400'} ${selectedMethod === method.key ? 'text-blue-600' : 'text-gray-600'} group-hover:text-blue-600`}>{method.description}</p>
-              </CardContent>
-            </Card>
-            ))}
-          </div>
-          <div className="h-10"></div>
-          { selectedMethod && (
-            <div id="addLeadsPanel" className="h-4">
-              <div className="flex flex-col gap-4 min-h-[500px]">
-                <LeadsMethod selectedMethod={selectedMethod} setSelectedMethod={setSelectedMethod} />
-              </div>
-            </div>
-          ) }
+      <div className="mt-8">
+        <h3 className="text-2xl font-medium">ADD LEADS METHODS</h3>
+        <div className="h-4"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        { addLeadsMethod.map((method, index) => (
+          <Card key={index} className={`border-[3px] ${method.isActive ? 'border-gray-300 bg-gray-50 cursor-pointer hover:border-blue-500' : 'cursor-not-allowed hidden'} ${selectedMethod === method.key ? 'border-blue-500 bg-blue-50' : ''} rounded-xl transition-all duration-300 group`} onClick={() => handleSelectMethod(method.key)}>
+            <CardHeader>
+              <h3 className={`text-xl font-medium ${selectedMethod === method.key ? 'text-blue-800' : 'text-gray-500'} group-hover:text-blue-600`}>{method.title}</h3>
+            </CardHeader>
+            <CardContent>
+              <p className={`text-sm ${method.isActive ? 'text-gray-600' : 'text-gray-400'} ${selectedMethod === method.key ? 'text-blue-600' : 'text-gray-600'} group-hover:text-blue-600`}>{method.description}</p>
+            </CardContent>
+          </Card>
+          ))}
         </div>
-      </RoleGuard>
+        <div className="h-10"></div>
+        { selectedMethod && (
+          <div id="addLeadsPanel" className="min-h-4">
+            <div className="flex flex-col gap-4 min-h-[500px]">
+              <LeadsMethod selectedMethod={selectedMethod} setSelectedMethod={setSelectedMethod} />
+            </div>
+          </div>
+        ) }
+      </div>
 
       {/* User Data Sync - For monitoring role changes */}
       <AdminAndUp>

@@ -1,26 +1,24 @@
 export interface Lead {
-  ProjectID: number
-  ContactChannelID: number
-  ContactTypeID: number
-  RefID: number
-  Fname: string
-  Lname: string
-  Tel: string
-  Email: string
-  Ref: string
-  RefDate: string
-  FollowUpID: number
-  utm_source: string
-  PriceInterest: string
-  PurchasePurpose: string
-  FlagPersonalAccept: boolean
-  FlagContactAccept: boolean
-  AppointTime: string
-  AppointTimeEnd: string
-  utm_campaign: string
-  utm_medium: string
-  utm_term: string
-  utm_content: string
+  projectID: number; //Required
+  firstName: string; //Required
+  lastName: string; //Required
+  tel: string; //Required
+  email: string; //Required
+  refDetail: string; //Required
+  refDate: string;
+  utm_source: string; //Required
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+  priceInterest?: string;
+  modelInterest?: string;
+  promoCode?: string;
+  purchasePurpose?: string;
+  appointDate?: string;
+  appointTime?: string; //Required ถ้ามีข้อมูล appointDate
+  appointTimeEnd?: string; //Required ถ้ามีข้อมูล appointDate
+  lineID?: string;
 }
 
 export interface Leads {
@@ -90,4 +88,12 @@ export interface Agent {
   agencyID: string
   isActive: boolean
   createDate: string
+}
+
+export interface Project {
+  buid: number
+  bu: string
+  projectID: number
+  projectCode: string
+  projectName: string
 }

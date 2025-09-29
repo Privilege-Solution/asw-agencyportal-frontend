@@ -8,7 +8,7 @@ import { useAuth, type AuthMethod } from "@/lib/auth-context"
 import { alert } from "@/hooks/use-alert"
 import Image from 'next/image'
 import { cookieUtils } from '@/lib/cookie-utils'
-
+import { apiCall } from '@/lib/api-utils'
 
 export function LoginSelector() {
   const { setAuthMethod, login } = useAuth()
@@ -34,8 +34,7 @@ export function LoginSelector() {
           cookieUtils.setAuthToken(accessToken)
           
           // Fetch complete user data from API first
-          const userResponse = await fetch('/api/user', {
-            method: 'GET',
+          const userResponse = await apiCall('/user', {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${accessToken}`
@@ -88,7 +87,7 @@ export function LoginSelector() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <Image src="/ASW_Logo_Rac_light-bg.svg" alt="AssetWise" width={180} height={100} className="mx-auto" />
+        <Image src="/agency/ASW_Logo_Rac_light-bg.svg" alt="AssetWise" width={180} height={100} className="mx-auto" />
         <CardTitle className="text-2xl font-medium">Agency Portal</CardTitle>
         <CardDescription>
           Choose your preferred login method
@@ -101,7 +100,7 @@ export function LoginSelector() {
           className="w-full flex items-center justify-center gap-3 h-15 hover:bg-blue-50 hover:border-blue-300"
           disabled={isLoadingMicrosoft}
         >
-          <Image src="/microsoft-svg-com.svg" alt="Microsoft" width={40} height={40} />
+          <Image src="/agency/microsoft-svg-com.svg" alt="Microsoft" width={40} height={40} />
           <div className="text-gray-600 text-lg">
             {isLoadingMicrosoft ? "Signing in..." : "Sign in with Microsoft"}
           </div>
